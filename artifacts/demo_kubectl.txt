@@ -1,11 +1,11 @@
 NAME                     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES             SELECTOR
-job.batch/run-3dfc00ce   1/1           4s         6s    runner       python:3.12-slim   controller-uid=010de9fb-17db-4ba6-a207-6f80811d71df
-job.batch/run-925aac5a   1/1           4s         6s    runner       python:3.12-slim   controller-uid=8e679c9e-0632-4040-bfe6-9ed0f82815db
-job.batch/run-a0b7010a   1/1           4s         6s    runner       python:3.12-slim   controller-uid=68577765-6df3-4d8a-80b0-810aac9f2ef0
-job.batch/run-d2c25e15   1/1           5s         9s    runner       python:3.12-slim   controller-uid=4b4a4854-6d6f-4cdc-aac0-8afb740faae2
+job.batch/run-70960aed   1/1           5s         5s    runner       python:3.12-slim   controller-uid=18ce12c5-8362-41d3-bde1-ac0d5e8891f4
+job.batch/run-8f322845   1/1           4s         7s    runner       python:3.12-slim   controller-uid=39ef62df-238f-47c2-aa4b-5675610bad36
+job.batch/run-afd8d491   1/1           5s         5s    runner       python:3.12-slim   controller-uid=30023217-839f-4fd8-ba5d-a63b3896d6a1
+job.batch/run-d2d9d932   1/1           5s         5s    runner       python:3.12-slim   controller-uid=6d26161d-c1f9-4e68-8b85-c2aca74fa205
 
 NAME                     READY   STATUS      RESTARTS   AGE   IP           NODE             NOMINATED NODE   READINESS GATES
-pod/run-3dfc00ce-lrbd7   0/1     Completed   0          6s    10.1.0.222   docker-desktop   <none>           <none>
-pod/run-925aac5a-jwccd   0/1     Completed   0          6s    10.1.0.221   docker-desktop   <none>           <none>
-pod/run-a0b7010a-ftqjq   0/1     Completed   0          6s    10.1.0.220   docker-desktop   <none>           <none>
-pod/run-d2c25e15-7bd85   0/1     Completed   0          9s    10.1.0.219   docker-desktop   <none>           <none>
+pod/run-70960aed-fjl5g   0/1     Completed   0          5s    10.1.0.225   docker-desktop   <none>           <none>
+pod/run-8f322845-h9jhw   0/1     Completed   0          7s    10.1.0.223   docker-desktop   <none>           <none>
+pod/run-afd8d491-h6fdx   0/1     Completed   0          5s    10.1.0.226   docker-desktop   <none>           <none>
+pod/run-d2d9d932-kdrq4   0/1     Completed   0          5s    10.1.0.224   docker-desktop   <none>           <none>

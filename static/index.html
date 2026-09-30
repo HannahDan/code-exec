@@ -88,11 +88,43 @@
       <label class="muted"><input type="checkbox" id="include-raw"> show raw runs</label>
     </div>
     <form class="new-task" id="new-task-form" hidden>
-      <label>Prompt<textarea name="prompt" rows="4" required placeholder="Write a Python function fizzbuzz(n) ..."></textarea></label>
-      <label>Hidden tests (Python, <code>from solution import ...</code>)<textarea name="tests" class="code" rows="7" required>from solution import fizzbuzz
+      <label>Prompt<textarea name="prompt" rows="5" required placeholder="Write a Python function ...">Write a Python function `two_sum(nums, target)` that returns the indices of the two numbers in `nums` that add up to `target`, as a list of two ints. Each input has exactly one solution, and you may not use the same element twice. The indices can be in any order. Inputs can contain tens of thousands of numbers, so aim for linear time.</textarea></label>
+      <label>Hidden tests (Python, <code>from solution import ...</code>; plain asserts, no pytest)<textarea name="tests" class="code" rows="12" required>from solution import two_sum
 
-def test_first_five():
-    assert fizzbuzz(5) == ["1", "2", "Fizz", "4", "Buzz"]
+
+def check(nums, target, expected):
+    result = two_sum(nums, target)
+    assert sorted(result) == expected, f"two_sum({nums[:6]}{'...' if len(nums) > 6 else ''}, {target}) returned {result}"
+
+
+def test_example():
+    check([2, 7, 11, 15], 9, [0, 1])
+
+
+def test_answer_not_at_start():
+    check([1, 5, 3, 8, 4], 12, [3, 4])
+
+
+def test_cannot_use_same_element_twice():
+    check([3, 2, 4], 6, [1, 2])
+
+
+def test_duplicate_values():
+    check([3, 3], 6, [0, 1])
+
+
+def test_negative_numbers_and_zero_target():
+    check([-3, 4, 3, 90], 0, [0, 2])
+
+
+def test_returns_two_indices():
+    result = two_sum([1, 2], 3)
+    assert len(result) == 2 and all(isinstance(i, int) for i in result)
+
+
+def test_large_input_linear_time():
+    nums = list(range(1, 20001))
+    check(nums, 39999, [19998, 19999])
 </textarea></label>
       <label>Candidates<input type="number" name="n_candidates" min="1" max="10" value="3"></label>
       <button class="primary" type="submit">Generate and run</button>
