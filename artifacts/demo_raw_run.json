@@ -1,0 +1,29 @@
+{
+  "id": "c4001d565c044456",
+  "candidate_id": "c61d83cc857f4de0",
+  "job_name": "run-ea74673b",
+  "status": "passed",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "",
+  "duration_ms": 4978,
+  "started_at": "2026-09-30T04:14:13.848984+00:00",
+  "finished_at": "2026-09-30T04:14:18.828792+00:00",
+  "test_results": {
+    "tests": [
+      {
+        "name": "test_negative",
+        "passed": true,
+        "error": null
+      },
+      {
+        "name": "test_small",
+        "passed": true,
+        "error": null
+      }
+    ],
+    "passed": 2,
+    "failed": 0,
+    "truncated": false
+  }
+}

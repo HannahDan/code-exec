@@ -12,7 +12,7 @@ k8s-apply:
 	kubectl apply -f k8s/networkpolicy.yaml
 
 run:
-	$(PYTHON) -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+	set -a; [ -f .env ] && . ./.env; set +a; $(PYTHON) -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 test:
 	set -o pipefail; $(PYTHON) -m pytest tests/ -v 2>&1 | tee artifacts/test_output.txt

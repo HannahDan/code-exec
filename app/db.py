@@ -1,12 +1,13 @@
 """SQLite schema and helpers."""
 
 import asyncio
+import os
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-DB_PATH = Path(__file__).parent.parent / "code_exec.db"
+DB_PATH = Path(os.getenv("CODE_EXEC_DB") or Path(__file__).parent.parent / "code_exec.db")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS tasks (
@@ -104,21 +105,37 @@ def get_task(task_id: str) -> dict | None:
     return _row_to_dict(row)
 
 
-def list_tasks() -> list[dict]:
+_LATEST_RUNS = (
+    "SELECT r.* FROM runs r WHERE r.rowid = "
+    "(SELECT MAX(r2.rowid) FROM runs r2 WHERE r2.candidate_id = r.candidate_id)"
+)
+
+
+def list_tasks(exclude_prompt: str | None = None) -> list[dict]:
     conn = _get_conn()
     rows = conn.execute(
         "SELECT t.*, "
-        "(SELECT COUNT(*) FROM candidates c WHERE c.task_id = t.id) AS candidate_count, "
-        "(SELECT COUNT(*) FROM candidates c JOIN runs r ON r.candidate_id = c.id "
-        " WHERE c.task_id = t.id AND r.status = 'passed') AS passed_count, "
-        "(SELECT COUNT(*) FROM candidates c JOIN runs r ON r.candidate_id = c.id "
-        " WHERE c.task_id = t.id AND r.status IN ('failed_tests','error','timeout','oom')) AS failed_count, "
-        "(SELECT COUNT(*) FROM candidates c JOIN runs r ON r.candidate_id = c.id "
-        " WHERE c.task_id = t.id AND r.status IN ('queued','running')) AS pending_count "
-        "FROM tasks t ORDER BY t.created_at DESC"
+        "COUNT(c.id) AS candidate_count, "
+        "SUM(CASE WHEN lr.status = 'passed' THEN 1 ELSE 0 END) AS passed_count, "
+        "SUM(CASE WHEN lr.status IN ('failed_tests','error','timeout','oom','infra_error') "
+        "    THEN 1 ELSE 0 END) AS failed_count, "
+        "SUM(CASE WHEN lr.status IN ('queued','running') THEN 1 ELSE 0 END) AS pending_count, "
+        "(SELECT COUNT(*) FROM annotations a WHERE a.task_id = t.id) AS annotation_count "
+        "FROM tasks t "
+        "LEFT JOIN candidates c ON c.task_id = t.id "
+        f"LEFT JOIN ({_LATEST_RUNS}) lr ON lr.candidate_id = c.id "
+        "WHERE (? IS NULL OR t.prompt != ?) "
+        "GROUP BY t.id ORDER BY t.created_at DESC",
+        (exclude_prompt, exclude_prompt),
     ).fetchall()
     conn.close()
-    return [_row_to_dict(r) for r in rows]
+    out = []
+    for r in rows:
+        d = _row_to_dict(r)
+        for key in ("passed_count", "failed_count", "pending_count"):
+            d[key] = d[key] or 0
+        out.append(d)
+    return out
 
 
 # ── Candidates ─────────────────────────────────────────────────────
@@ -137,10 +154,17 @@ def insert_candidate(task_id: str, source: str, code: str) -> dict:
     return _row_to_dict(row)
 
 
+def get_candidate(candidate_id: str) -> dict | None:
+    conn = _get_conn()
+    row = conn.execute("SELECT * FROM candidates WHERE id = ?", (candidate_id,)).fetchone()
+    conn.close()
+    return _row_to_dict(row)
+
+
 def get_candidates_for_task(task_id: str) -> list[dict]:
     conn = _get_conn()
     rows = conn.execute(
-        "SELECT * FROM candidates WHERE task_id = ? ORDER BY created_at", (task_id,)
+        "SELECT * FROM candidates WHERE task_id = ? ORDER BY rowid", (task_id,)
     ).fetchall()
     conn.close()
     return [_row_to_dict(r) for r in rows]
@@ -183,7 +207,7 @@ def get_run(run_id: str) -> dict | None:
 def get_latest_run_for_candidate(candidate_id: str) -> dict | None:
     conn = _get_conn()
     row = conn.execute(
-        "SELECT * FROM runs WHERE candidate_id = ? ORDER BY started_at DESC LIMIT 1",
+        "SELECT * FROM runs WHERE candidate_id = ? ORDER BY rowid DESC LIMIT 1",
         (candidate_id,),
     ).fetchone()
     conn.close()

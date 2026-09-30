@@ -1,0 +1,56 @@
+
+[21:14:12] kubectl context: docker-desktop
+
+[21:14:12] WARNING: AQ_API_KEY is not set; LLM candidates will record the error and fail in the sandbox.
+
+[21:14:12] 1. Applying k8s manifests
+namespace/sandbox unchanged
+networkpolicy.networking.k8s.io/deny-all-code-runner unchanged
+
+[21:14:12] 2. Starting server on :8765 (log: artifacts/demo_server.log)
+{"status":"ok"}
+
+[21:14:13] 3a. Submitting raw run (POST /runs)
+raw run id: c4001d565c044456
+
+[21:14:13] 3b. Submitting LLM task (POST /tasks, fizzbuzz, n_candidates=3)
+task id: 912894206ea94f31
+
+[21:14:13] 4. Waiting for runs to finish
+raw run status: passed
+candidate 9c663ff899a5436b: error (0 passed, 0 failed, 4408 ms)
+candidate 862bea2e3af34ff1: error (0 passed, 0 failed, 4403 ms)
+candidate 6c20963bf7cc459b: error (0 passed, 0 failed, 4406 ms)
+
+[21:14:19] 4b. Posting annotations and a preference
+{"candidate_id":"9c663ff899a5436b","label":"incorrect","notes":"demo: run status was error"}
+{"candidate_id":"862bea2e3af34ff1","label":"incorrect","notes":"demo: run status was error"}
+{"candidate_id":"6c20963bf7cc459b","label":"incorrect","notes":"demo: run status was error"}
+{"chosen_candidate_id":"9c663ff899a5436b","rejected_candidate_id":"862bea2e3af34ff1"}
+{"chosen_candidate_id":"9c663ff899a5436b","rejected_candidate_id":"6c20963bf7cc459b"}
+
+[21:14:19] 5. Saving evidence to artifacts/
+preferences export endpoint not available yet (added in M6)
+
+[21:14:19] 6. kubectl get jobs,pods -n sandbox -o wide
+NAME                     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES             SELECTOR
+job.batch/run-82ee5e86   0/1           31s        31s   runner       python:3.12-slim   controller-uid=847e80de-456c-46b7-970b-7a6d74e99950
+job.batch/run-8e2383ae   0/1           31s        31s   runner       python:3.12-slim   controller-uid=b67eef7b-b93d-4ba3-87a8-d99f8c1de496
+job.batch/run-93c87310   1/1           5s         31s   runner       python:3.12-slim   controller-uid=0977aea0-4177-4168-8252-65ca3eb5ac61
+job.batch/run-b7f35424   0/1           6s         6s    runner       python:3.12-slim   controller-uid=61f0144e-9cbe-4c01-8087-e13cac58e60e
+job.batch/run-d5c53e24   0/1           6s         6s    runner       python:3.12-slim   controller-uid=9b0a0d0d-3a4c-424e-943e-79da87fdd99d
+job.batch/run-ea74673b   1/1           5s         6s    runner       python:3.12-slim   controller-uid=f227a1b0-859b-43b7-9571-2d6add60be00
+job.batch/run-edff8316   0/1           6s         6s    runner       python:3.12-slim   controller-uid=af75705c-5b5f-4218-915d-84daeaef005a
+job.batch/run-f8cb5d0c   0/1           31s        31s   runner       python:3.12-slim   controller-uid=ff84c2dd-6774-40fa-9a70-09ec6b0562f5
+
+NAME                     READY   STATUS      RESTARTS   AGE   IP          NODE             NOMINATED NODE   READINESS GATES
+pod/run-82ee5e86-tgp4n   0/1     Error       0          31s   10.1.0.29   docker-desktop   <none>           <none>
+pod/run-8e2383ae-s64rl   0/1     Error       0          31s   10.1.0.32   docker-desktop   <none>           <none>
+pod/run-93c87310-mf657   0/1     Completed   0          31s   10.1.0.30   docker-desktop   <none>           <none>
+pod/run-b7f35424-5d724   0/1     Error       0          6s    10.1.0.35   docker-desktop   <none>           <none>
+pod/run-d5c53e24-7kk62   0/1     Error       0          6s    10.1.0.33   docker-desktop   <none>           <none>
+pod/run-ea74673b-82mx5   0/1     Completed   0          6s    10.1.0.34   docker-desktop   <none>           <none>
+pod/run-edff8316-r54xj   0/1     Error       0          6s    10.1.0.36   docker-desktop   <none>           <none>
+pod/run-f8cb5d0c-td2nl   0/1     Error       0          31s   10.1.0.31   docker-desktop   <none>           <none>
+
+[21:14:19] Done. task=912894206ea94f31 raw_run=c4001d565c044456 best=9c663ff899a5436b

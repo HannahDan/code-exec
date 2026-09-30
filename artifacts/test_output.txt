@@ -3,13 +3,27 @@ platform darwin -- Python 3.10.11, pytest-8.3.5, pluggy-1.5.0 -- /Library/Framew
 cachedir: .pytest_cache
 rootdir: /Users/subinpradeep/code-exec
 plugins: dash-2.17.1, typeguard-4.1.5, anyio-4.15.1
-collecting ... collected 6 items
+collecting ... collected 20 items
 
-tests/test_api.py::test_healthz_db_ok PASSED                             [ 16%]
-tests/test_api.py::test_index_returns_html PASSED                        [ 33%]
-tests/test_executor.py::test_happy_path PASSED                           [ 50%]
-tests/test_executor.py::test_wrong_answer PASSED                         [ 66%]
-tests/test_executor.py::test_timeout PASSED                              [ 83%]
+tests/test_api.py::test_healthz_db_ok PASSED                             [  5%]
+tests/test_api.py::test_index_returns_html PASSED                        [ 10%]
+tests/test_api.py::test_post_tasks_generates_and_runs_candidates PASSED  [ 15%]
+tests/test_api.py::test_post_tasks_validates_n_candidates PASSED         [ 20%]
+tests/test_api.py::test_list_tasks_summary_counts_and_hides_raw PASSED   [ 25%]
+tests/test_api.py::test_get_unknown_task_404 PASSED                      [ 30%]
+tests/test_api.py::test_llm_failure_still_creates_candidates PASSED      [ 35%]
+tests/test_api.py::test_annotation_roundtrip_and_validation PASSED       [ 40%]
+tests/test_api.py::test_preference_one_row_per_rejected PASSED           [ 45%]
+tests/test_api.py::test_strip_fences[```python\ndef f():\n    return 1\n```-def f():\n    return 1\n] PASSED [ 50%]
+tests/test_api.py::test_strip_fences[Sure! Here you go:\n```py\nx = 1\n```\nHope that helps.-x = 1\n] PASSED [ 55%]
+tests/test_api.py::test_strip_fences[```\ny = 2\n```-y = 2\n] PASSED     [ 60%]
+tests/test_api.py::test_strip_fences[def g():\n    pass-def g():\n    pass\n] PASSED [ 65%]
+tests/test_api.py::test_strip_fences[```python\ndef cut_off():\n    return-def cut_off():\n    return\n] PASSED [ 70%]
+tests/test_api.py::test_generate_candidates_records_api_errors PASSED    [ 75%]
+tests/test_api.py::test_generate_candidates_uses_env_config_and_temperature PASSED [ 80%]
+tests/test_executor.py::test_happy_path PASSED                           [ 85%]
+tests/test_executor.py::test_wrong_answer PASSED                         [ 90%]
+tests/test_executor.py::test_timeout PASSED                              [ 95%]
 tests/test_executor.py::test_post_runs_end_to_end PASSED                 [100%]
 
 =============================== warnings summary ===============================
@@ -18,9 +32,9 @@ tests/test_executor.py::test_post_runs_end_to_end PASSED                 [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 tests/test_api.py: 1 warning
-tests/test_executor.py: 110 warnings
+tests/test_executor.py: 106 warnings
   /Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/kubernetes/client/rest.py:47: DeprecationWarning: HTTPResponse.getheader() is deprecated and will be removed in urllib3 v2.1.0. Instead use HTTPResponse.headers.get(name, default).
     return self.urllib3_response.getheader(name, default)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-======================= 6 passed, 112 warnings in 24.62s =======================
+====================== 20 passed, 108 warnings in 23.99s =======================

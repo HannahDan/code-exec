@@ -31,6 +31,12 @@ def truncate(s, max_len=MAX_ERROR_CHARS):
     return s if len(s) <= max_len else s[:max_len] + "...[truncated]"
 
 
+def truncate_tail(s, max_len=MAX_ERROR_CHARS):
+    # Tracebacks end with the exception line, which is the part worth keeping.
+    s = str(s)
+    return s if len(s) <= max_len else "[truncated]..." + s[-max_len:]
+
+
 def emit(result, code):
     sys.stdout.flush()
     print("__RESULT__ " + json.dumps(result), flush=True)
@@ -38,7 +44,7 @@ def emit(result, code):
 
 
 def collection_error(stage):
-    tb = truncate(traceback.format_exc())
+    tb = truncate_tail(traceback.format_exc())
     print(f"{stage} failed:\n{tb}", file=sys.stderr, flush=True)
     emit({"tests": [], "passed": 0, "failed": 0, "error": f"{stage} failed: {tb}"}, 2)
 

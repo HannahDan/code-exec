@@ -50,3 +50,42 @@
   `.SHELLFLAGS := -o pipefail -c`, but macOS ships GNU Make 3.81 and `.SHELLFLAGS` only exists from 3.82,
   so it was silently ignored (`make test` still exited 0 on a forced failure). The recipe now starts with
   `set -o pipefail;`, which works on any make; a forced failure exits 2.
+
+## M3 Decisions
+
+- **LLM calls**: `generate_candidates(prompt, n)` makes `n` separate chat-completion calls (temperature 0.8)
+  in a small thread pool, rather than one call with the `n` parameter, which not every
+  OpenAI-compatible provider supports. Client: `OpenAI(api_key=AQ_API_KEY, base_url=AQ_BASE_URL)`,
+  60s timeout, 2 retries. Config is read from env at call time, never from files in the app.
+- **Fence stripping**: takes the longest fenced block (```` ```python ````, ```` ```py ````, or bare
+  ```` ``` ````). An unterminated opening fence (response cut off) is stripped too. No fence at all: the
+  raw text is stored as-is.
+- **LLM failures**: a failed call (or missing `AQ_API_KEY`) becomes a candidate whose code is
+  `# LLM generation failed: <error>`. It still runs, fails with `error` (exit 2, `ImportError`), and shows
+  up in the UI as data instead of failing the task.
+- **`POST /tasks` flow**: returns 202 with `task_id` immediately; a background task generates candidates,
+  persists each with a `queued` run, then executes them. Runs are unbounded here; M5 adds the semaphore.
+- **"Generating" state**: the schema has no `n_candidates` column, so while generation is in flight the
+  task id sits in an in-memory `GENERATING` set, exposed as `generating: true` on task responses. It's
+  lost on restart; M5's recovery only covers runs, so a crash mid-generation leaves a task with fewer
+  candidates than requested.
+- **Summary counts** use each candidate's latest run (by `rowid`, since `started_at` is overwritten when a
+  run starts). `failed_count` includes `infra_error`.
+- **Raw tasks hidden by default**: `POST /runs` creates a task with prompt `raw submission`. `GET /tasks`
+  hides those unless `?include_raw=true`, so the annotator list isn't flooded by test/concurrency runs.
+- **Preference endpoint pulled forward from M6**: the M3 demo posts a preference, so
+  `POST /tasks/{id}/preference` exists now (validates membership, rejects chosen-in-rejected, dedupes).
+  The JSONL export is still M6; the demo skips it until then.
+- **Collection-error tracebacks keep the tail**: the runner truncates import/collection tracebacks from
+  the end, so the exception line (e.g. `ImportError: cannot import name 'fizzbuzz'`) survives the
+  500-char limit. Per-test errors are short `Type: message` strings and keep the head.
+- **Demo isolation**: `demo.sh` uses a fresh `demo.db` (via the new `CODE_EXEC_DB` env var) on port 8765,
+  so committed artifacts don't include rows from earlier runs, and it doesn't clash with `make run` on 8000.
+- **`.env` loading**: `demo.sh` and `make run` source `.env` if present. The app itself only reads env vars.
+
+### Demo status
+
+- `scripts/demo.sh` runs end to end against Docker Desktop (`artifacts/demo_output.txt`). The raw run
+  passes. **No `AQ_API_KEY` was available**, so the three LLM candidates in `artifacts/demo_task.json`
+  are error candidates (`status: error`, exit 2). The real-LLM path is covered by mocked tests in
+  `tests/test_api.py` but has not been exercised against the provider yet.
