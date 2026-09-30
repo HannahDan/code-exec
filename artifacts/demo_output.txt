@@ -1,0 +1,46 @@
+
+[21:26:34] kubectl context: docker-desktop
+
+[21:26:34] 1. Applying k8s manifests
+namespace/sandbox unchanged
+networkpolicy.networking.k8s.io/deny-all-code-runner unchanged
+
+[21:26:34] 2. Starting server on :8765 (log: artifacts/demo_server.log)
+{"status":"ok"}
+
+[21:26:36] 3a. Submitting raw run (POST /runs)
+raw run id: ef479d94feb74528
+
+[21:26:36] 3b. Submitting LLM task (POST /tasks, fizzbuzz, n_candidates=3)
+task id: f36e0a9503614205
+
+[21:26:36] 4. Waiting for runs to finish
+raw run status: passed
+candidate 0504a47dbec84faa: passed (3 passed, 0 failed, 4920 ms)
+candidate 593b8154c4a34781: passed (3 passed, 0 failed, 6011 ms)
+candidate fec2cf25b7aa437d: passed (3 passed, 0 failed, 4924 ms)
+
+[21:26:49] 4b. Posting annotations and a preference
+{"candidate_id":"0504a47dbec84faa","label":"correct","notes":"demo: run status was passed"}
+{"candidate_id":"593b8154c4a34781","label":"correct","notes":"demo: run status was passed"}
+{"candidate_id":"fec2cf25b7aa437d","label":"correct","notes":"demo: run status was passed"}
+{"chosen_candidate_id":"0504a47dbec84faa","rejected_candidate_id":"593b8154c4a34781"}
+{"chosen_candidate_id":"0504a47dbec84faa","rejected_candidate_id":"fec2cf25b7aa437d"}
+
+[21:26:49] 5. Saving evidence to artifacts/
+preferences export endpoint not available yet (added in M6)
+
+[21:26:49] 6. kubectl get jobs,pods -n sandbox -o wide
+NAME                     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES             SELECTOR
+job.batch/run-01e07f66   1/1           5s         6s    runner       python:3.12-slim   controller-uid=2b7ab591-c6ee-4081-a107-02f2efcddd24
+job.batch/run-1fa79b62   1/1           4s         13s   runner       python:3.12-slim   controller-uid=7b6c1d63-535d-4f43-9747-1e46abbcdf31
+job.batch/run-3cadb82d   1/1           5s         6s    runner       python:3.12-slim   controller-uid=1c15d573-9cac-4a6e-aba4-ff16500639e9
+job.batch/run-8bf6942a   1/1           6s         6s    runner       python:3.12-slim   controller-uid=b3034445-9787-4b0e-bffd-aff46682a685
+
+NAME                     READY   STATUS      RESTARTS   AGE   IP          NODE             NOMINATED NODE   READINESS GATES
+pod/run-01e07f66-vdljc   0/1     Completed   0          6s    10.1.0.43   docker-desktop   <none>           <none>
+pod/run-1fa79b62-2mjc5   0/1     Completed   0          13s   10.1.0.41   docker-desktop   <none>           <none>
+pod/run-3cadb82d-69sg7   0/1     Completed   0          6s    10.1.0.42   docker-desktop   <none>           <none>
+pod/run-8bf6942a-qkvhd   0/1     Completed   0          6s    10.1.0.44   docker-desktop   <none>           <none>
+
+[21:26:49] Done. task=f36e0a9503614205 raw_run=ef479d94feb74528 best=0504a47dbec84faa

@@ -6,7 +6,6 @@ __pycache__/
 dist/
 build/
 .pytest_cache/
-artifacts/*.txt
-artifacts/*.json
-artifacts/*.jsonl
 *.db
+*.db-wal
+*.db-shm

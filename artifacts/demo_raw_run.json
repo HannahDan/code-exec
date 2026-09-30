@@ -1,0 +1,29 @@
+{
+  "id": "ef479d94feb74528",
+  "candidate_id": "0a366a14721c4d4d",
+  "job_name": "run-1fa79b62",
+  "status": "passed",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "",
+  "duration_ms": 4364,
+  "started_at": "2026-09-30T04:26:36.067571+00:00",
+  "finished_at": "2026-09-30T04:26:40.432505+00:00",
+  "test_results": {
+    "tests": [
+      {
+        "name": "test_negative",
+        "passed": true,
+        "error": null
+      },
+      {
+        "name": "test_small",
+        "passed": true,
+        "error": null
+      }
+    ],
+    "passed": 2,
+    "failed": 0,
+    "truncated": false
+  }
+}

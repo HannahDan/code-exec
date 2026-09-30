@@ -1,0 +1,11 @@
+NAME                     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES             SELECTOR
+job.batch/run-01e07f66   1/1           5s         6s    runner       python:3.12-slim   controller-uid=2b7ab591-c6ee-4081-a107-02f2efcddd24
+job.batch/run-1fa79b62   1/1           4s         13s   runner       python:3.12-slim   controller-uid=7b6c1d63-535d-4f43-9747-1e46abbcdf31
+job.batch/run-3cadb82d   1/1           5s         6s    runner       python:3.12-slim   controller-uid=1c15d573-9cac-4a6e-aba4-ff16500639e9
+job.batch/run-8bf6942a   1/1           6s         6s    runner       python:3.12-slim   controller-uid=b3034445-9787-4b0e-bffd-aff46682a685
+
+NAME                     READY   STATUS      RESTARTS   AGE   IP          NODE             NOMINATED NODE   READINESS GATES
+pod/run-01e07f66-vdljc   0/1     Completed   0          6s    10.1.0.43   docker-desktop   <none>           <none>
+pod/run-1fa79b62-2mjc5   0/1     Completed   0          13s   10.1.0.41   docker-desktop   <none>           <none>
+pod/run-3cadb82d-69sg7   0/1     Completed   0          6s    10.1.0.42   docker-desktop   <none>           <none>
+pod/run-8bf6942a-qkvhd   0/1     Completed   0          6s    10.1.0.44   docker-desktop   <none>           <none>
