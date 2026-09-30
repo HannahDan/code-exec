@@ -41,9 +41,9 @@ tests/test_executor.py::test_outbound_network XFAIL (NetworkPolicy n...) [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 tests/test_api.py: 1 warning
-tests/test_executor.py: 321 warnings
+tests/test_executor.py: 347 warnings
   /Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/kubernetes/client/rest.py:47: DeprecationWarning: HTTPResponse.getheader() is deprecated and will be removed in urllib3 v2.1.0. Instead use HTTPResponse.headers.get(name, default).
     return self.urllib3_response.getheader(name, default)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-============ 28 passed, 1 xfailed, 323 warnings in 68.04s (0:01:08) ============
+============ 28 passed, 1 xfailed, 349 warnings in 75.70s (0:01:15) ============
