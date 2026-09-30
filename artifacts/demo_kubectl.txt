@@ -1,19 +1,11 @@
 NAME                     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES             SELECTOR
-job.batch/run-82ee5e86   0/1           31s        31s   runner       python:3.12-slim   controller-uid=847e80de-456c-46b7-970b-7a6d74e99950
-job.batch/run-8e2383ae   0/1           31s        31s   runner       python:3.12-slim   controller-uid=b67eef7b-b93d-4ba3-87a8-d99f8c1de496
-job.batch/run-93c87310   1/1           5s         31s   runner       python:3.12-slim   controller-uid=0977aea0-4177-4168-8252-65ca3eb5ac61
-job.batch/run-b7f35424   0/1           6s         6s    runner       python:3.12-slim   controller-uid=61f0144e-9cbe-4c01-8087-e13cac58e60e
-job.batch/run-d5c53e24   0/1           6s         6s    runner       python:3.12-slim   controller-uid=9b0a0d0d-3a4c-424e-943e-79da87fdd99d
-job.batch/run-ea74673b   1/1           5s         6s    runner       python:3.12-slim   controller-uid=f227a1b0-859b-43b7-9571-2d6add60be00
-job.batch/run-edff8316   0/1           6s         6s    runner       python:3.12-slim   controller-uid=af75705c-5b5f-4218-915d-84daeaef005a
-job.batch/run-f8cb5d0c   0/1           31s        31s   runner       python:3.12-slim   controller-uid=ff84c2dd-6774-40fa-9a70-09ec6b0562f5
+job.batch/run-01e07f66   1/1           5s         6s    runner       python:3.12-slim   controller-uid=2b7ab591-c6ee-4081-a107-02f2efcddd24
+job.batch/run-1fa79b62   1/1           4s         13s   runner       python:3.12-slim   controller-uid=7b6c1d63-535d-4f43-9747-1e46abbcdf31
+job.batch/run-3cadb82d   1/1           5s         6s    runner       python:3.12-slim   controller-uid=1c15d573-9cac-4a6e-aba4-ff16500639e9
+job.batch/run-8bf6942a   1/1           6s         6s    runner       python:3.12-slim   controller-uid=b3034445-9787-4b0e-bffd-aff46682a685
 
 NAME                     READY   STATUS      RESTARTS   AGE   IP          NODE             NOMINATED NODE   READINESS GATES
-pod/run-82ee5e86-tgp4n   0/1     Error       0          31s   10.1.0.29   docker-desktop   <none>           <none>
-pod/run-8e2383ae-s64rl   0/1     Error       0          31s   10.1.0.32   docker-desktop   <none>           <none>
-pod/run-93c87310-mf657   0/1     Completed   0          31s   10.1.0.30   docker-desktop   <none>           <none>
-pod/run-b7f35424-5d724   0/1     Error       0          6s    10.1.0.35   docker-desktop   <none>           <none>
-pod/run-d5c53e24-7kk62   0/1     Error       0          6s    10.1.0.33   docker-desktop   <none>           <none>
-pod/run-ea74673b-82mx5   0/1     Completed   0          6s    10.1.0.34   docker-desktop   <none>           <none>
-pod/run-edff8316-r54xj   0/1     Error       0          6s    10.1.0.36   docker-desktop   <none>           <none>
-pod/run-f8cb5d0c-td2nl   0/1     Error       0          31s   10.1.0.31   docker-desktop   <none>           <none>
+pod/run-01e07f66-vdljc   0/1     Completed   0          6s    10.1.0.43   docker-desktop   <none>           <none>
+pod/run-1fa79b62-2mjc5   0/1     Completed   0          13s   10.1.0.41   docker-desktop   <none>           <none>
+pod/run-3cadb82d-69sg7   0/1     Completed   0          6s    10.1.0.42   docker-desktop   <none>           <none>
+pod/run-8bf6942a-qkvhd   0/1     Completed   0          6s    10.1.0.44   docker-desktop   <none>           <none>

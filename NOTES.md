@@ -85,7 +85,11 @@
 
 ### Demo status
 
-- `scripts/demo.sh` runs end to end against Docker Desktop (`artifacts/demo_output.txt`). The raw run
-  passes. **No `AQ_API_KEY` was available**, so the three LLM candidates in `artifacts/demo_task.json`
-  are error candidates (`status: error`, exit 2). The real-LLM path is covered by mocked tests in
-  `tests/test_api.py` but has not been exercised against the provider yet.
+- `scripts/demo.sh` runs end to end against Docker Desktop with a real `AQ_API_KEY`
+  (`artifacts/demo_output.txt`). The raw run passes (2/2 tests). All three `openai/gpt-4.1-mini` fizzbuzz
+  candidates pass 3/3 tests (`artifacts/demo_task.json`); each run took ~4.4s wall-clock.
+- **Candidate diversity**: only 2 of the 3 candidates were distinct — two were byte-identical despite
+  temperature 0.8. Expected for a problem as small as fizzbuzz. In this run the duplicates were both on
+  the rejected side, so no preference pair compares identical code, but that can happen. M6's export
+  should flag or skip pairs where chosen and rejected code are identical, since they carry no signal.
+- Checked that the API key does not appear anywhere in `artifacts/`.

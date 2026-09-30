@@ -1,82 +1,130 @@
 {
   "task": {
-    "id": "912894206ea94f31",
+    "id": "f36e0a9503614205",
     "prompt": "Write a Python function `fizzbuzz(n)` that returns a list of strings for the numbers 1..n: \"Fizz\" for multiples of 3, \"Buzz\" for multiples of 5, \"FizzBuzz\" for multiples of both, otherwise the number as a string.",
     "tests": "from solution import fizzbuzz\n\ndef test_first_five():\n    assert fizzbuzz(5) == [\"1\", \"2\", \"Fizz\", \"4\", \"Buzz\"]\n\ndef test_fifteen():\n    assert fizzbuzz(15)[-1] == \"FizzBuzz\"\n\ndef test_length_and_zero():\n    assert len(fizzbuzz(30)) == 30\n    assert fizzbuzz(0) == []\n",
-    "created_at": "2026-09-30T04:14:13.863290+00:00"
+    "created_at": "2026-09-30T04:26:36.080779+00:00"
   },
   "generating": false,
   "candidates": [
     {
-      "id": "9c663ff899a5436b",
-      "task_id": "912894206ea94f31",
+      "id": "0504a47dbec84faa",
+      "task_id": "f36e0a9503614205",
       "source": "llm",
-      "code": "# LLM generation failed: AQ_API_KEY is not set\n",
-      "created_at": "2026-09-30T04:14:13.865912+00:00",
+      "code": "def fizzbuzz(n):\n    return [\n        \"FizzBuzz\" if i % 15 == 0 else\n        \"Fizz\" if i % 3 == 0 else\n        \"Buzz\" if i % 5 == 0 else\n        str(i)\n        for i in range(1, n + 1)\n    ]\n",
+      "created_at": "2026-09-30T04:26:43.351821+00:00",
       "latest_run": {
-        "id": "c8ad5db76ef040e8",
-        "candidate_id": "9c663ff899a5436b",
-        "job_name": "run-edff8316",
-        "status": "error",
-        "exit_code": 2,
-        "stdout": "tests import failed:\nTraceback (most recent call last):\n  File \"/workspace/runner.py\", line 61, in main\n    import tests as test_module\n  File \"/workspace/..2026_09_30_04_14_14.1998465865/tests.py\", line 1, in <module>\n    from solution import fizzbuzz\nImportError: cannot import name 'fizzbuzz' from 'solution' (/workspace/..2026_09_30_04_14_14.1998465865/solution.py)\n",
-        "stderr": "tests import failed: Traceback (most recent call last):\n  File \"/workspace/runner.py\", line 61, in main\n    import tests as test_module\n  File \"/workspace/..2026_09_30_04_14_14.1998465865/tests.py\", line 1, in <module>\n    from solution import fizzbuzz\nImportError: cannot import name 'fizzbuzz' from 'solution' (/workspace/..2026_09_30_04_14_14.1998465865/solution.py)\n",
-        "duration_ms": 4408,
-        "started_at": "2026-09-30T04:14:13.875891+00:00",
-        "finished_at": "2026-09-30T04:14:18.285523+00:00",
+        "id": "4bc4a605add8403f",
+        "candidate_id": "0504a47dbec84faa",
+        "job_name": "run-01e07f66",
+        "status": "passed",
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "duration_ms": 4920,
+        "started_at": "2026-09-30T04:26:43.359986+00:00",
+        "finished_at": "2026-09-30T04:26:48.283210+00:00",
         "test_results": {
-          "tests": [],
-          "passed": 0,
+          "tests": [
+            {
+              "name": "test_fifteen",
+              "passed": true,
+              "error": null
+            },
+            {
+              "name": "test_first_five",
+              "passed": true,
+              "error": null
+            },
+            {
+              "name": "test_length_and_zero",
+              "passed": true,
+              "error": null
+            }
+          ],
+          "passed": 3,
           "failed": 0,
           "truncated": false
         }
       }
     },
     {
-      "id": "862bea2e3af34ff1",
-      "task_id": "912894206ea94f31",
+      "id": "593b8154c4a34781",
+      "task_id": "f36e0a9503614205",
       "source": "llm",
-      "code": "# LLM generation failed: AQ_API_KEY is not set\n",
-      "created_at": "2026-09-30T04:14:13.871299+00:00",
+      "code": "def fizzbuzz(n):\n    return [\"FizzBuzz\" if i % 15 == 0 else \"Fizz\" if i % 3 == 0 else \"Buzz\" if i % 5 == 0 else str(i) for i in range(1, n+1)]\n",
+      "created_at": "2026-09-30T04:26:43.354902+00:00",
       "latest_run": {
-        "id": "c78f80d588794c46",
-        "candidate_id": "862bea2e3af34ff1",
-        "job_name": "run-d5c53e24",
-        "status": "error",
-        "exit_code": 2,
-        "stdout": "tests import failed:\nTraceback (most recent call last):\n  File \"/workspace/runner.py\", line 61, in main\n    import tests as test_module\n  File \"/workspace/..2026_09_30_04_14_14.2887123062/tests.py\", line 1, in <module>\n    from solution import fizzbuzz\nImportError: cannot import name 'fizzbuzz' from 'solution' (/workspace/..2026_09_30_04_14_14.2887123062/solution.py)\n",
-        "stderr": "tests import failed: Traceback (most recent call last):\n  File \"/workspace/runner.py\", line 61, in main\n    import tests as test_module\n  File \"/workspace/..2026_09_30_04_14_14.2887123062/tests.py\", line 1, in <module>\n    from solution import fizzbuzz\nImportError: cannot import name 'fizzbuzz' from 'solution' (/workspace/..2026_09_30_04_14_14.2887123062/solution.py)\n",
-        "duration_ms": 4403,
-        "started_at": "2026-09-30T04:14:13.875922+00:00",
-        "finished_at": "2026-09-30T04:14:18.282644+00:00",
+        "id": "29562427a541420f",
+        "candidate_id": "593b8154c4a34781",
+        "job_name": "run-8bf6942a",
+        "status": "passed",
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "duration_ms": 6011,
+        "started_at": "2026-09-30T04:26:43.360023+00:00",
+        "finished_at": "2026-09-30T04:26:49.376289+00:00",
         "test_results": {
-          "tests": [],
-          "passed": 0,
+          "tests": [
+            {
+              "name": "test_fifteen",
+              "passed": true,
+              "error": null
+            },
+            {
+              "name": "test_first_five",
+              "passed": true,
+              "error": null
+            },
+            {
+              "name": "test_length_and_zero",
+              "passed": true,
+              "error": null
+            }
+          ],
+          "passed": 3,
           "failed": 0,
           "truncated": false
         }
       }
     },
     {
-      "id": "6c20963bf7cc459b",
-      "task_id": "912894206ea94f31",
+      "id": "fec2cf25b7aa437d",
+      "task_id": "f36e0a9503614205",
       "source": "llm",
-      "code": "# LLM generation failed: AQ_API_KEY is not set\n",
-      "created_at": "2026-09-30T04:14:13.874481+00:00",
+      "code": "def fizzbuzz(n):\n    return [\"FizzBuzz\" if i % 15 == 0 else \"Fizz\" if i % 3 == 0 else \"Buzz\" if i % 5 == 0 else str(i) for i in range(1, n+1)]\n",
+      "created_at": "2026-09-30T04:26:43.358070+00:00",
       "latest_run": {
-        "id": "f8e491e3b3fe434c",
-        "candidate_id": "6c20963bf7cc459b",
-        "job_name": "run-b7f35424",
-        "status": "error",
-        "exit_code": 2,
-        "stdout": "tests import failed:\nTraceback (most recent call last):\n  File \"/workspace/runner.py\", line 61, in main\n    import tests as test_module\n  File \"/workspace/..2026_09_30_04_14_14.2897660705/tests.py\", line 1, in <module>\n    from solution import fizzbuzz\nImportError: cannot import name 'fizzbuzz' from 'solution' (/workspace/..2026_09_30_04_14_14.2897660705/solution.py)\n",
-        "stderr": "tests import failed: Traceback (most recent call last):\n  File \"/workspace/runner.py\", line 61, in main\n    import tests as test_module\n  File \"/workspace/..2026_09_30_04_14_14.2897660705/tests.py\", line 1, in <module>\n    from solution import fizzbuzz\nImportError: cannot import name 'fizzbuzz' from 'solution' (/workspace/..2026_09_30_04_14_14.2897660705/solution.py)\n",
-        "duration_ms": 4406,
-        "started_at": "2026-09-30T04:14:13.876074+00:00",
-        "finished_at": "2026-09-30T04:14:18.285413+00:00",
+        "id": "784025c7af634c50",
+        "candidate_id": "fec2cf25b7aa437d",
+        "job_name": "run-3cadb82d",
+        "status": "passed",
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "duration_ms": 4924,
+        "started_at": "2026-09-30T04:26:43.360049+00:00",
+        "finished_at": "2026-09-30T04:26:48.285650+00:00",
         "test_results": {
-          "tests": [],
-          "passed": 0,
+          "tests": [
+            {
+              "name": "test_fifteen",
+              "passed": true,
+              "error": null
+            },
+            {
+              "name": "test_first_five",
+              "passed": true,
+              "error": null
+            },
+            {
+              "name": "test_length_and_zero",
+              "passed": true,
+              "error": null
+            }
+          ],
+          "passed": 3,
           "failed": 0,
           "truncated": false
         }
@@ -85,28 +133,28 @@
   ],
   "annotations": [
     {
-      "id": "3764bb21f70544e1",
-      "task_id": "912894206ea94f31",
-      "candidate_id": "9c663ff899a5436b",
-      "label": "incorrect",
-      "notes": "demo: run status was error",
-      "created_at": "2026-09-30T04:14:19.080672+00:00"
+      "id": "ab688ee6c3be4dfe",
+      "task_id": "f36e0a9503614205",
+      "candidate_id": "0504a47dbec84faa",
+      "label": "correct",
+      "notes": "demo: run status was passed",
+      "created_at": "2026-09-30T04:26:49.620634+00:00"
     },
     {
-      "id": "700329a178674546",
-      "task_id": "912894206ea94f31",
-      "candidate_id": "862bea2e3af34ff1",
-      "label": "incorrect",
-      "notes": "demo: run status was error",
-      "created_at": "2026-09-30T04:14:19.091627+00:00"
+      "id": "c407cf302d0840a6",
+      "task_id": "f36e0a9503614205",
+      "candidate_id": "593b8154c4a34781",
+      "label": "correct",
+      "notes": "demo: run status was passed",
+      "created_at": "2026-09-30T04:26:49.632979+00:00"
     },
     {
-      "id": "f52cf26e0d8b4473",
-      "task_id": "912894206ea94f31",
-      "candidate_id": "6c20963bf7cc459b",
-      "label": "incorrect",
-      "notes": "demo: run status was error",
-      "created_at": "2026-09-30T04:14:19.102094+00:00"
+      "id": "313e7a900e6140c7",
+      "task_id": "f36e0a9503614205",
+      "candidate_id": "fec2cf25b7aa437d",
+      "label": "correct",
+      "notes": "demo: run status was passed",
+      "created_at": "2026-09-30T04:26:49.645199+00:00"
     }
   ]
 }
