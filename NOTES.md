@@ -36,11 +36,17 @@
 
 ### Issues hit
 
-- `V1OwnerReference.to_dict()` emits snake_case keys (`api_version`), which the API server rejects with
-  422. The patch body uses camelCase keys directly.
-- With `kubernetes==36.0.3`, `read_namespaced_pod_log` returned the Python repr of a bytes object
-  (`"b'...\\n'"`), so the `__RESULT__` line was never matched. Logs are read with
-  `_preload_content=False` and decoded manually.
-- `.gitignore` originally excluded `artifacts/*.txt|json|jsonl`, which contradicts the spec (artifacts
-  are committed evidence). Removed.
-- `make test` piped through `tee`, which masked pytest failures. The Makefile now uses `pipefail`.
+- **ConfigMap ownerReference patch → 422.** `V1OwnerReference.to_dict()` returns the model's Python
+  attribute names (`api_version`, `block_owner_deletion`, plus `controller: None`), not the wire format.
+  The API server saw no `apiVersion` and rejected the patch. The wire format comes from
+  `ApiClient().sanitize_for_serialization()`; the patch body now uses those camelCase keys directly.
+- **`__RESULT__` never parsed.** In `kubernetes==36.0.3`, `ApiClient.__call_api` skips decoding when the
+  response type is `"str"` (pod logs are), then `__deserialize_primitive` calls `str(bytes)`, which in
+  Python 3 yields the repr `"b'...\\n'"`. Reproduced on a live pod: the default read returns
+  `"b'__RESULT__ ..."`. Logs are read with `_preload_content=False` and decoded as UTF-8 manually.
+- **Artifacts ignored by git.** `.gitignore` excluded `artifacts/*.txt|json|jsonl`, which contradicts the
+  spec (artifacts are committed evidence). Removed; `git check-ignore` confirms they're tracked now.
+- **`make test` hid failures.** `pytest | tee` returns tee's exit code. The first fix used
+  `.SHELLFLAGS := -o pipefail -c`, but macOS ships GNU Make 3.81 and `.SHELLFLAGS` only exists from 3.82,
+  so it was silently ignored (`make test` still exited 0 on a forced failure). The recipe now starts with
+  `set -o pipefail;`, which works on any make; a forced failure exits 2.

@@ -23,4 +23,4 @@ tests/test_executor.py: 110 warnings
     return self.urllib3_response.getheader(name, default)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-======================= 6 passed, 112 warnings in 24.73s =======================
+======================= 6 passed, 112 warnings in 24.62s =======================

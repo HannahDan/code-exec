@@ -1,7 +1,6 @@
 .PHONY: setup k8s-apply run test demo clean
 
 SHELL := /bin/bash
-.SHELLFLAGS := -o pipefail -c
 PYTHON ?= python3
 
 setup:
@@ -16,7 +15,7 @@ run:
 	$(PYTHON) -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 test:
-	$(PYTHON) -m pytest tests/ -v 2>&1 | tee artifacts/test_output.txt
+	set -o pipefail; $(PYTHON) -m pytest tests/ -v 2>&1 | tee artifacts/test_output.txt
 
 demo:
 	bash scripts/demo.sh
