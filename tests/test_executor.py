@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import threading
 import time
 import urllib.request
 from pathlib import Path
@@ -98,21 +99,105 @@ def test_timeout():
     assert result.duration_ms > 0
 
 
+def wait_terminal(client, run_ids, timeout=120.0) -> dict[str, dict]:
+    deadline = time.monotonic() + timeout
+    rows = {}
+    while True:
+        rows = {rid: client.get(f"/runs/{rid}").json() for rid in run_ids}
+        if all(r["status"] in executor.TERMINAL_STATUSES for r in rows.values()):
+            return rows
+        assert time.monotonic() < deadline, {rid: r["status"] for rid, r in rows.items()}
+        time.sleep(0.5)
+
+
 def test_post_runs_end_to_end():
     with TestClient(app) as client:
         resp = client.post("/runs", json={"code": "def add(a, b):\n    return a + b\n", "tests": ADD_TESTS})
         assert resp.status_code == 202
         created = resp.json()
         assert created["status"] == "queued"
-
-        # TestClient runs background tasks before returning, so the run is terminal here.
-        run_row = client.get(f"/runs/{created['id']}").json()
+        run_row = wait_terminal(client, [created["id"]])[created["id"]]
 
     assert run_row["status"] == "passed", run_row
     assert run_row["job_name"].startswith("run-")
     assert run_row["test_results"]["passed"] == 3
     assert run_row["duration_ms"] > 0
     assert run_row["finished_at"] is not None
+
+
+# ── Concurrency / recovery ─────────────────────────────────────────
+
+def _unfinished_jobs(run_ids: set[str]) -> int:
+    jobs = executor._batch().list_namespaced_job(executor.NAMESPACE, label_selector="app=code-runner").items
+    return sum(
+        1
+        for j in jobs
+        if (j.metadata.labels or {}).get("run-id") in run_ids and executor._job_condition(j)[0] is None
+    )
+
+
+def test_concurrency_twelve_runs_bounded(monkeypatch):
+    monkeypatch.setenv("MAX_CONCURRENT_JOBS", "4")
+    code = "import time\n\ndef add(a, b):\n    time.sleep(1)\n    return a + b\n"
+    observed = []
+    stop = threading.Event()
+    run_ids: set[str] = set()
+
+    def watch_cluster():
+        while not stop.is_set():
+            try:
+                observed.append(_unfinished_jobs(run_ids))
+            except Exception:
+                pass
+            stop.wait(0.3)
+
+    started = time.monotonic()
+    with TestClient(app) as client:
+        watcher = threading.Thread(target=watch_cluster, daemon=True)
+        watcher.start()
+        for _ in range(12):
+            run_ids.add(client.post("/runs", json={"code": code, "tests": ADD_TESTS}).json()["id"])
+        rows = wait_terminal(client, run_ids, timeout=180)
+        stats = client.get("/healthz").json()["pool"]
+        stop.set()
+        watcher.join()
+    wall = time.monotonic() - started
+
+    statuses = sorted(r["status"] for r in rows.values())
+    OBSERVED["concurrency"] = {
+        "runs": len(rows),
+        "statuses": statuses,
+        "max_concurrent_jobs": stats["max_concurrent"],
+        "pool_peak_in_flight": stats["peak_in_flight"],
+        "cluster_peak_unfinished_jobs": max(observed, default=0),
+        "cluster_samples": len(observed),
+        "wall_seconds": round(wall, 1),
+    }
+    assert len(rows) == 12
+    assert statuses == ["passed"] * 12, statuses
+    assert stats["max_concurrent"] == 4
+    assert stats["peak_in_flight"] == 4, "pool never reached the limit, so the bound wasn't exercised"
+    assert max(observed) <= 4, f"cluster had {max(observed)} unfinished jobs at once"
+    assert max(observed) >= 2, "watcher never saw overlapping jobs"
+
+
+def test_recovery_reattaches_job_after_restart():
+    """Simulate a crash mid-run: the Job exists, the DB says running, no process is watching."""
+    task = db.insert_task("raw submission", ADD_TESTS)
+    cand = db.insert_candidate(task["id"], "raw", "def add(a, b):\n    return a + b\n")
+    run_row = db.insert_run(cand["id"])
+    job_name = executor.new_job_name()
+    executor._create_resources(job_name, run_row["id"], cand["code"], ADD_TESTS)
+    db.update_run(run_row["id"], status="running", job_name=job_name, started_at=executor._now())
+
+    with TestClient(app) as client:
+        assert app.state.recovery["reattached"] == 1
+        final = wait_terminal(client, [run_row["id"]])[run_row["id"]]
+
+    OBSERVED["recovery_reattach"] = {"status": final["status"], "job_name": final["job_name"], "duration_ms": final["duration_ms"]}
+    assert final["status"] == "passed", final
+    assert final["job_name"] == job_name
+    assert final["test_results"]["passed"] == 3
 
 
 # ── Adversarial ────────────────────────────────────────────────────

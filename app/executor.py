@@ -401,16 +401,56 @@ async def execute_run(run_id: str, code: str, tests: str) -> dict | None:
         result = await run_job(code, tests, run_id, job_name=job_name)
         return await db.async_call(db.update_run, run_id, **_result_columns(result))
     except Exception as exc:
-        try:
-            return await db.async_call(
-                db.update_run,
-                run_id,
-                status="infra_error",
-                stderr=f"executor error: {_describe(exc)}",
-                finished_at=_now(),
-            )
-        except Exception:
-            return None
+        return await _store_failure(run_id, f"executor error: {_describe(exc)}")
+
+
+def _job_exists(job_name: str) -> bool:
+    try:
+        _batch().read_namespaced_job(job_name, NAMESPACE)
+        return True
+    except ApiException as exc:
+        if exc.status == 404:
+            return False
+        raise
+
+
+async def job_exists(job_name: str | None) -> bool:
+    """Whether the run's Job is still in the cluster. Raises if the API can't tell."""
+    if not job_name:
+        return False
+    return await asyncio.to_thread(_job_exists, job_name)
+
+
+async def attach_run(run_id: str, job_name: str, started_at: str | None = None) -> dict | None:
+    """Resume watching a Job created before a restart, and store its outcome. Never raises."""
+    start = time.monotonic()
+    result = RunResult(status="infra_error", job_name=job_name)
+    try:
+        await _wait_and_collect(result, run_id, start)
+    except Exception as exc:
+        result.status = "infra_error"
+        _append_stderr(result, f"executor error after restart: {_describe(exc)}")
+    result.duration_ms = _ms_since(started_at) if started_at else _elapsed_ms(start)
+    try:
+        return await db.async_call(db.update_run, run_id, **_result_columns(result))
+    except Exception as exc:
+        return await _store_failure(run_id, f"could not store result: {_describe(exc)}")
+
+
+async def _store_failure(run_id: str, message: str) -> dict | None:
+    try:
+        return await db.async_call(
+            db.update_run, run_id, status="infra_error", stderr=message, finished_at=_now()
+        )
+    except Exception:
+        return None
+
+
+def _ms_since(iso: str) -> int:
+    try:
+        return max(0, int((datetime.now(timezone.utc) - datetime.fromisoformat(iso)).total_seconds() * 1000))
+    except ValueError:
+        return 0
 
 
 def _result_columns(result: RunResult) -> dict:

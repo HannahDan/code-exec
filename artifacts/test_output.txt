@@ -3,36 +3,42 @@ platform darwin -- Python 3.10.11, pytest-8.3.5, pluggy-1.5.0 -- /Library/Framew
 cachedir: .pytest_cache
 rootdir: /Users/subinpradeep/code-exec
 plugins: dash-2.17.1, typeguard-4.1.5, anyio-4.15.1
-collecting ... collected 29 items
+collecting ... collected 35 items
 
-tests/test_api.py::test_healthz_db_ok PASSED                             [  3%]
-tests/test_api.py::test_index_returns_html PASSED                        [  6%]
-tests/test_api.py::test_post_tasks_generates_and_runs_candidates PASSED  [ 10%]
-tests/test_api.py::test_post_tasks_validates_n_candidates PASSED         [ 13%]
-tests/test_api.py::test_list_tasks_summary_counts_and_hides_raw PASSED   [ 17%]
-tests/test_api.py::test_get_unknown_task_404 PASSED                      [ 20%]
-tests/test_api.py::test_llm_failure_still_creates_candidates PASSED      [ 24%]
-tests/test_api.py::test_annotation_roundtrip_and_validation PASSED       [ 27%]
-tests/test_api.py::test_preference_one_row_per_rejected PASSED           [ 31%]
-tests/test_api.py::test_strip_fences[```python\ndef f():\n    return 1\n```-def f():\n    return 1\n] PASSED [ 34%]
-tests/test_api.py::test_strip_fences[Sure! Here you go:\n```py\nx = 1\n```\nHope that helps.-x = 1\n] PASSED [ 37%]
-tests/test_api.py::test_strip_fences[```\ny = 2\n```-y = 2\n] PASSED     [ 41%]
-tests/test_api.py::test_strip_fences[def g():\n    pass-def g():\n    pass\n] PASSED [ 44%]
-tests/test_api.py::test_strip_fences[```python\ndef cut_off():\n    return-def cut_off():\n    return\n] PASSED [ 48%]
-tests/test_api.py::test_generate_candidates_records_api_errors PASSED    [ 51%]
-tests/test_api.py::test_generate_candidates_uses_env_config_and_temperature PASSED [ 55%]
-tests/test_executor.py::test_happy_path PASSED                           [ 58%]
+tests/test_api.py::test_healthz_db_ok PASSED                             [  2%]
+tests/test_api.py::test_index_returns_html PASSED                        [  5%]
+tests/test_api.py::test_post_tasks_generates_and_runs_candidates PASSED  [  8%]
+tests/test_api.py::test_post_tasks_validates_n_candidates PASSED         [ 11%]
+tests/test_api.py::test_list_tasks_summary_counts_and_hides_raw PASSED   [ 14%]
+tests/test_api.py::test_get_unknown_task_404 PASSED                      [ 17%]
+tests/test_api.py::test_llm_failure_still_creates_candidates PASSED      [ 20%]
+tests/test_api.py::test_annotation_roundtrip_and_validation PASSED       [ 22%]
+tests/test_api.py::test_preference_one_row_per_rejected PASSED           [ 25%]
+tests/test_api.py::test_pool_never_exceeds_max_concurrent PASSED         [ 28%]
+tests/test_api.py::test_max_concurrent_jobs_from_env PASSED              [ 31%]
+tests/test_api.py::test_recovery_requeues_queued_and_marks_stale_running PASSED [ 34%]
+tests/test_api.py::test_recovery_reattaches_running_with_live_job PASSED [ 37%]
+tests/test_api.py::test_strip_fences[```python\ndef f():\n    return 1\n```-def f():\n    return 1\n] PASSED [ 40%]
+tests/test_api.py::test_strip_fences[Sure! Here you go:\n```py\nx = 1\n```\nHope that helps.-x = 1\n] PASSED [ 42%]
+tests/test_api.py::test_strip_fences[```\ny = 2\n```-y = 2\n] PASSED     [ 45%]
+tests/test_api.py::test_strip_fences[def g():\n    pass-def g():\n    pass\n] PASSED [ 48%]
+tests/test_api.py::test_strip_fences[```python\ndef cut_off():\n    return-def cut_off():\n    return\n] PASSED [ 51%]
+tests/test_api.py::test_generate_candidates_records_api_errors PASSED    [ 54%]
+tests/test_api.py::test_generate_candidates_uses_env_config_and_temperature PASSED [ 57%]
+tests/test_executor.py::test_happy_path PASSED                           [ 60%]
 tests/test_executor.py::test_wrong_answer PASSED                         [ 62%]
 tests/test_executor.py::test_timeout PASSED                              [ 65%]
 tests/test_executor.py::test_post_runs_end_to_end PASSED                 [ 68%]
-tests/test_executor.py::test_syntax_error PASSED                         [ 72%]
-tests/test_executor.py::test_memory_bomb PASSED                          [ 75%]
-tests/test_executor.py::test_memory_growing_list PASSED                  [ 79%]
-tests/test_executor.py::test_fork_bomb_is_contained PASSED               [ 82%]
-tests/test_executor.py::test_nproc_limit_caps_forks PASSED               [ 86%]
-tests/test_executor.py::test_missing_image_is_infra_error PASSED         [ 89%]
-tests/test_executor.py::test_read_only_filesystem PASSED                 [ 93%]
-tests/test_executor.py::test_huge_stdout_is_truncated PASSED             [ 96%]
+tests/test_executor.py::test_concurrency_twelve_runs_bounded PASSED      [ 71%]
+tests/test_executor.py::test_recovery_reattaches_job_after_restart PASSED [ 74%]
+tests/test_executor.py::test_syntax_error PASSED                         [ 77%]
+tests/test_executor.py::test_memory_bomb PASSED                          [ 80%]
+tests/test_executor.py::test_memory_growing_list PASSED                  [ 82%]
+tests/test_executor.py::test_fork_bomb_is_contained PASSED               [ 85%]
+tests/test_executor.py::test_nproc_limit_caps_forks PASSED               [ 88%]
+tests/test_executor.py::test_missing_image_is_infra_error PASSED         [ 91%]
+tests/test_executor.py::test_read_only_filesystem PASSED                 [ 94%]
+tests/test_executor.py::test_huge_stdout_is_truncated PASSED             [ 97%]
 tests/test_executor.py::test_outbound_network XFAIL (NetworkPolicy n...) [100%]
 
 =============================== warnings summary ===============================
@@ -41,9 +47,9 @@ tests/test_executor.py::test_outbound_network XFAIL (NetworkPolicy n...) [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 tests/test_api.py: 1 warning
-tests/test_executor.py: 347 warnings
+tests/test_executor.py: 870 warnings
   /Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/kubernetes/client/rest.py:47: DeprecationWarning: HTTPResponse.getheader() is deprecated and will be removed in urllib3 v2.1.0. Instead use HTTPResponse.headers.get(name, default).
     return self.urllib3_response.getheader(name, default)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-============ 28 passed, 1 xfailed, 349 warnings in 75.70s (0:01:15) ============
+=========== 34 passed, 1 xfailed, 872 warnings in 105.56s (0:01:45) ============
