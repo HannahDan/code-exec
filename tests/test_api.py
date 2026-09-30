@@ -1,13 +1,16 @@
 """API tests using FastAPI TestClient. The LLM and executor are mocked; no cluster needed."""
 
+import asyncio
 import json
+import time
 from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
 
-from app import db, executor, llm, main
+from app import db, executor, llm
 from app.main import app
+from app.worker import WorkerPool
 
 FIZZ_TESTS = "from solution import fizzbuzz\ndef test_three():\n    assert fizzbuzz(3)[-1] == 'Fizz'\n"
 
@@ -161,6 +164,103 @@ def test_preference_one_row_per_rejected(client, fake_pipeline):
 
     bad = client.post(f"/tasks/{task_id}/preference", json={"chosen_candidate_id": a, "rejected_candidate_ids": [a]})
     assert bad.status_code == 400
+
+
+# ── Worker pool / recovery ─────────────────────────────────────────
+
+def test_pool_never_exceeds_max_concurrent(monkeypatch):
+    live = {"now": 0, "peak": 0, "done": []}
+
+    async def fake_execute(run_id, code, tests):
+        live["now"] += 1
+        live["peak"] = max(live["peak"], live["now"])
+        await asyncio.sleep(0.05)
+        live["now"] -= 1
+        live["done"].append(run_id)
+
+    monkeypatch.setattr(executor, "execute_run", fake_execute)
+
+    async def scenario():
+        pool = WorkerPool(max_concurrent=3)
+        tasks = [pool.submit(f"r{i}", "code", "tests") for i in range(10)]
+        await asyncio.sleep(0.01)
+        assert pool.stats()["in_flight"] == 3
+        assert pool.stats()["waiting"] == 7
+        await pool.join(tasks)
+        return pool
+
+    pool = asyncio.run(scenario())
+    assert live["peak"] == 3
+    assert pool.peak_in_flight == 3
+    assert sorted(live["done"]) == sorted(f"r{i}" for i in range(10))
+    assert pool.stats()["in_flight"] == 0
+
+
+def test_max_concurrent_jobs_from_env(monkeypatch):
+    monkeypatch.setenv("MAX_CONCURRENT_JOBS", "7")
+    assert WorkerPool().max_concurrent == 7
+    monkeypatch.setenv("MAX_CONCURRENT_JOBS", "nonsense")
+    assert WorkerPool().max_concurrent == 4
+
+
+def _seed_run(status: str, job_name: str | None = None) -> dict:
+    task = db.insert_task("p", "def test_a():\n    pass\n")
+    cand = db.insert_candidate(task["id"], "raw", "x = 1\n")
+    run = db.insert_run(cand["id"])
+    return db.update_run(run["id"], status=status, job_name=job_name)
+
+
+def test_recovery_requeues_queued_and_marks_stale_running(monkeypatch):
+    queued = _seed_run("queued")
+    stale = _seed_run("running", job_name="run-gone0001")
+    executed = []
+
+    async def fake_execute(run_id, code, tests):
+        executed.append((run_id, code, tests))
+        db.update_run(run_id, status="passed")
+
+    async def fake_exists(job_name):
+        return False
+
+    monkeypatch.setattr(executor, "execute_run", fake_execute)
+    monkeypatch.setattr(executor, "job_exists", fake_exists)
+
+    with TestClient(app) as client:
+        assert app.state.recovery == {"requeued": 1, "reattached": 0, "stale": 1}
+        deadline = time.monotonic() + 5
+        while client.get(f"/runs/{queued['id']}").json()["status"] != "passed":
+            assert time.monotonic() < deadline
+            time.sleep(0.05)
+        stale_row = client.get(f"/runs/{stale['id']}").json()
+
+    assert executed == [(queued["id"], "x = 1\n", "def test_a():\n    pass\n")]
+    assert stale_row["status"] == "infra_error"
+    assert "run-gone0001 no longer exists" in stale_row["stderr"]
+    assert stale_row["finished_at"] is not None
+
+
+def test_recovery_reattaches_running_with_live_job(monkeypatch):
+    live = _seed_run("running", job_name="run-live0001")
+    attached = []
+
+    async def fake_exists(job_name):
+        return True
+
+    async def fake_attach(run_id, job_name, started_at=None):
+        attached.append((run_id, job_name))
+        db.update_run(run_id, status="passed")
+
+    monkeypatch.setattr(executor, "job_exists", fake_exists)
+    monkeypatch.setattr(executor, "attach_run", fake_attach)
+
+    with TestClient(app) as client:
+        assert app.state.recovery == {"requeued": 0, "reattached": 1, "stale": 0}
+        deadline = time.monotonic() + 5
+        while client.get(f"/runs/{live['id']}").json()["status"] != "passed":
+            assert time.monotonic() < deadline
+            time.sleep(0.05)
+
+    assert attached == [(live["id"], "run-live0001")]
 
 
 # ── LLM helpers ────────────────────────────────────────────────────

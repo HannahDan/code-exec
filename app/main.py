@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from app import db, executor, llm
+from app.worker import WorkerPool
 
 STATIC_DIR = Path(__file__).parent.parent / "static"
 RAW_TASK_PROMPT = "raw submission"
@@ -23,7 +24,15 @@ GENERATING: set[str] = set()
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     db.init_db()
+    pool = WorkerPool()
+    application.state.pool = pool
+    application.state.recovery = await pool.recover()
     yield
+    await pool.shutdown()
+
+
+def pool() -> WorkerPool:
+    return app.state.pool
 
 
 app = FastAPI(title="Code Annotation Runner", lifespan=lifespan)
@@ -97,18 +106,18 @@ async def healthz():
         errors.append(f"k8s: {exc}")
 
     if errors:
-        return JSONResponse({"status": "unhealthy", "errors": errors}, status_code=503)
-    return {"status": "ok"}
+        return JSONResponse({"status": "unhealthy", "errors": errors, "pool": pool().stats()}, status_code=503)
+    return {"status": "ok", "pool": pool().stats()}
 
 
 # ── Runs ───────────────────────────────────────────────────────────
 
 @app.post("/runs", status_code=202)
-async def create_run(req: RunRequest, background_tasks: BackgroundTasks):
+async def create_run(req: RunRequest):
     task = await db.async_call(db.insert_task, RAW_TASK_PROMPT, req.tests)
     candidate = await db.async_call(db.insert_candidate, task["id"], "raw", req.code)
     run = await db.async_call(db.insert_run, candidate["id"])
-    background_tasks.add_task(executor.execute_run, run["id"], req.code, req.tests)
+    pool().submit(run["id"], req.code, req.tests)
     return serialize_run(run)
 
 
@@ -133,7 +142,7 @@ async def generate_and_run(task_id: str, prompt: str, tests: str, n: int) -> Non
             queued.append((run["id"], code))
     finally:
         GENERATING.discard(task_id)
-    await asyncio.gather(*(executor.execute_run(run_id, code, tests) for run_id, code in queued))
+    await pool().join([pool().submit(run_id, code, tests) for run_id, code in queued])
 
 
 @app.post("/tasks", status_code=202)

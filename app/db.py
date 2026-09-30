@@ -217,9 +217,10 @@ def get_latest_run_for_candidate(candidate_id: str) -> dict | None:
 def get_queued_or_running_runs() -> list[dict]:
     conn = _get_conn()
     rows = conn.execute(
-        "SELECT r.*, c.code, c.task_id FROM runs r "
+        "SELECT r.*, c.code, c.task_id, t.tests FROM runs r "
         "JOIN candidates c ON c.id = r.candidate_id "
-        "WHERE r.status IN ('queued', 'running') ORDER BY r.started_at"
+        "JOIN tasks t ON t.id = c.task_id "
+        "WHERE r.status IN ('queued', 'running') ORDER BY r.rowid"
     ).fetchall()
     conn.close()
     return [_row_to_dict(r) for r in rows]
