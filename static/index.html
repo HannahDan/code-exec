@@ -1,12 +1,534 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Code Annotation Runner</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Annotation Runner</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #fff; --border: #dde1e6; --text: #1f2328; --muted: #656d76;
+    --accent: #0969da; --pass: #1a7f37; --warn: #9a6700; --fail: #cf222e; --oom: #8c1d18;
+    --timeout: #8250df; --infra: #57606a; --pending: #0969da;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--text); background: var(--bg); }
+  header { display: flex; align-items: center; gap: 16px; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 2; }
+  header h1 { font-size: 16px; margin: 0; }
+  header .spacer { flex: 1; }
+  header .pool { color: var(--muted); font-size: 12px; }
+  a { color: var(--accent); }
+  .layout { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - 49px); }
+  aside { border-right: 1px solid var(--border); background: var(--panel); overflow-y: auto; }
+  main { overflow-y: auto; padding: 16px 20px 40px; }
+  .aside-tools { padding: 10px 12px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+  .task-item { padding: 10px 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .task-item:hover { background: #f3f6fa; }
+  .task-item.selected { background: #ddf4ff; }
+  .task-item .prompt { overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .task-item .meta { margin-top: 4px; display: flex; gap: 6px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .empty { color: var(--muted); padding: 24px 12px; text-align: center; }
+  button { font: inherit; padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; background: #f6f8fa; cursor: pointer; }
+  button:hover { background: #eef1f4; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button:disabled { opacity: .5; cursor: default; }
+  button.label-btn.active[data-label="correct"] { background: var(--pass); color: #fff; border-color: var(--pass); }
+  button.label-btn.active[data-label="incorrect"] { background: var(--fail); color: #fff; border-color: var(--fail); }
+  button.label-btn.active[data-label="partial"] { background: var(--warn); color: #fff; border-color: var(--warn); }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #fff; background: var(--infra); white-space: nowrap; }
+  .badge.passed { background: var(--pass); } .badge.failed_tests { background: var(--warn); }
+  .badge.error { background: var(--fail); } .badge.oom { background: var(--oom); }
+  .badge.timeout { background: var(--timeout); } .badge.infra_error { background: var(--infra); }
+  .badge.queued, .badge.running, .badge.generating { background: var(--pending); }
+  .badge.light { background: #eaeef2; color: var(--text); font-weight: 500; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; }
+  .panel h2 { font-size: 15px; margin: 0 0 8px; }
+  .prompt-text { white-space: pre-wrap; }
+  pre { margin: 0; padding: 10px 12px; background: #f6f8fa; border: 1px solid var(--border); border-radius: 6px; overflow-x: auto; font: 12.5px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; }
+  pre.wrap { white-space: pre-wrap; word-break: break-all; max-height: 260px; overflow-y: auto; }
+  .card-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .card-head .title { font-weight: 600; }
+  .card-head .muted, .muted { color: var(--muted); font-size: 12px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 10px; font-size: 13px; }
+  th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  td.ok { color: var(--pass); font-weight: 600; } td.bad { color: var(--fail); font-weight: 600; }
+  td.err { font-family: ui-monospace, Menlo, monospace; font-size: 12px; white-space: pre-wrap; word-break: break-word; }
+  details { margin-top: 10px; } summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  details pre { margin-top: 6px; }
+  .annotate { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); display: grid; gap: 8px; }
+  .annotate .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  textarea, input[type=number] { font: inherit; width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; }
+  textarea.code { font: 12.5px/1.45 ui-monospace, Menlo, monospace; }
+  .best { display: flex; align-items: center; gap: 6px; margin-left: auto; font-weight: 600; }
+  .pref-bar { position: sticky; bottom: 0; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .toast { position: fixed; bottom: 16px; right: 16px; padding: 10px 14px; border-radius: 6px; background: #1f2328; color: #fff; opacity: 0; transition: opacity .2s; }
+  .toast.show { opacity: .95; } .toast.err { background: var(--fail); }
+  form.new-task { display: grid; gap: 8px; padding: 12px; border-bottom: 1px solid var(--border); background: #fbfcfd; }
+  form.new-task label { font-size: 12px; color: var(--muted); }
+  .task-actions { margin-left: auto; display: flex; gap: 6px; }
+  button.danger { color: var(--fail); border-color: #f1b8bc; }
+  button.danger:hover:not(:disabled) { background: #ffebe9; }
+  .editor { display: grid; gap: 8px; margin-top: 10px; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .edit-row { margin-top: 8px; }
+  [hidden] { display: none !important; }
+</style>
 </head>
 <body>
-    <h1>Code Annotation Runner</h1>
-    <p>UI coming in M6.</p>
+<header>
+  <h1>Code Annotation Runner</h1>
+  <span class="pool" id="pool"></span>
+  <span class="spacer"></span>
+  <a href="/export/preferences.jsonl" download>Download preferences.jsonl</a>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="aside-tools">
+      <button id="new-task-toggle">+ New task</button>
+      <label class="muted"><input type="checkbox" id="include-raw"> show raw runs</label>
+    </div>
+    <form class="new-task" id="new-task-form" hidden>
+      <label>Prompt<textarea name="prompt" rows="4" required placeholder="Write a Python function fizzbuzz(n) ..."></textarea></label>
+      <label>Hidden tests (Python, <code>from solution import ...</code>)<textarea name="tests" class="code" rows="7" required>from solution import fizzbuzz
+
+def test_first_five():
+    assert fizzbuzz(5) == ["1", "2", "Fizz", "4", "Buzz"]
+</textarea></label>
+      <label>Candidates<input type="number" name="n_candidates" min="1" max="10" value="3"></label>
+      <button class="primary" type="submit">Generate and run</button>
+    </form>
+    <div id="task-list"></div>
+  </aside>
+  <main id="detail"><div class="empty">Select a task on the left, or create a new one.</div></main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+const TERMINAL = new Set(["passed", "failed_tests", "error", "timeout", "oom", "infra_error"]);
+const LABELS = ["correct", "partial", "incorrect"];
+const ACTIVE_POLL_MS = 2000;
+const IDLE_POLL_MS = 10000;
+
+const state = {
+  selectedTaskId: new URLSearchParams(location.hash.slice(1)).get("task"),
+  includeRaw: false,
+  lastListJson: "",
+  lastDetailJson: "",
+  notesDraft: {},        // candidate id -> unsaved notes text
+  bestChoice: {},        // task id -> candidate id selected as best
+  codeDraft: {},         // candidate id -> code in its open "edit & rerun" editor
+  testsDraft: {},        // task id -> tests in the open "edit tests" editor
+  timer: null,
+};
+
+// Candidate code and outputs are untrusted: every string is inserted as a text node, never parsed as HTML.
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (value === null || value === undefined || value === false) continue;
+    if (key === "class") node.className = value;
+    else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
+    else if (key === "checked" || key === "disabled") node[key] = Boolean(value);
+    else node.setAttribute(key, value === true ? "" : String(value));
+  }
+  for (const child of children.flat(Infinity)) {
+    if (child === null || child === undefined || child === false) continue;
+    node.append(child instanceof Node ? child : document.createTextNode(String(child)));
+  }
+  return node;
+}
+
+function toast(message, isError = false) {
+  const t = document.getElementById("toast");
+  t.textContent = message;
+  t.className = "toast show" + (isError ? " err" : "");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => (t.className = "toast"), 2500);
+}
+
+async function api(path, options = {}) {
+  const resp = await fetch(path, { headers: { "content-type": "application/json" }, ...options });
+  const body = resp.headers.get("content-type")?.includes("json") ? await resp.json() : await resp.text();
+  if (!resp.ok) {
+    const detail = typeof body === "object" ? JSON.stringify(body.detail ?? body) : body;
+    throw new Error(`${resp.status}: ${detail}`);
+  }
+  return body;
+}
+
+const shortId = (id) => (id || "").slice(0, 8);
+const badge = (status) => el("span", { class: `badge ${status}` }, status.replace("_", " "));
+
+// ── Task list ──────────────────────────────────────────────────────
+
+async function loadTasks() {
+  const tasks = await api(`/tasks${state.includeRaw ? "?include_raw=true" : ""}`);
+  const json = JSON.stringify(tasks);
+  if (json !== state.lastListJson) {
+    state.lastListJson = json;
+    renderTaskList(tasks);
+  }
+  return tasks;
+}
+
+function renderTaskList(tasks) {
+  const list = document.getElementById("task-list");
+  list.replaceChildren();
+  if (!tasks.length) {
+    list.append(el("div", { class: "empty" }, "No tasks yet."));
+    return;
+  }
+  for (const t of tasks) {
+    const meta = [];
+    if (t.generating) meta.push(badge("generating"));
+    if (t.pending_count) meta.push(el("span", { class: "badge running" }, `${t.pending_count} running`));
+    if (t.passed_count) meta.push(el("span", { class: "badge passed" }, `${t.passed_count} passed`));
+    if (t.failed_count) meta.push(el("span", { class: "badge error" }, `${t.failed_count} failed`));
+    meta.push(el("span", {}, `${t.candidate_count} candidate${t.candidate_count === 1 ? "" : "s"}`));
+    if (t.annotation_count) meta.push(el("span", {}, `${t.annotation_count} label${t.annotation_count === 1 ? "" : "s"}`));
+    list.append(el("div", {
+      class: "task-item" + (t.id === state.selectedTaskId ? " selected" : ""),
+      onclick: () => selectTask(t.id),
+    }, el("div", { class: "prompt" }, t.prompt), el("div", { class: "meta" }, meta)));
+  }
+}
+
+function selectTask(id) {
+  state.selectedTaskId = id;
+  state.lastDetailJson = "";
+  state.lastListJson = "";
+  location.hash = `task=${id}`;
+  refresh();
+}
+
+// ── Task detail ────────────────────────────────────────────────────
+
+async function loadDetail() {
+  if (!state.selectedTaskId) return null;
+  let detail;
+  try {
+    detail = await api(`/tasks/${state.selectedTaskId}`);
+  } catch (err) {
+    document.getElementById("detail").replaceChildren(el("div", { class: "empty" }, `Could not load task: ${err.message}`));
+    return null;
+  }
+  const json = JSON.stringify(detail);
+  // Re-rendering replaces every node, which would drop the caret of whoever is typing.
+  const typing = document.activeElement?.tagName === "TEXTAREA"
+    && document.getElementById("detail").contains(document.activeElement);
+  if (json !== state.lastDetailJson && !typing) {
+    state.lastDetailJson = json;
+    renderDetail(detail);
+  }
+  return detail;
+}
+
+function latestAnnotation(annotations, candidateId) {
+  const mine = annotations.filter((a) => a.candidate_id === candidateId);
+  return mine[mine.length - 1] || null;
+}
+
+function renderDetail(detail) {
+  const { task, candidates, annotations, preferences } = detail;
+  const main = document.getElementById("detail");
+  const scroll = main.scrollTop;
+  main.replaceChildren();
+  const busy = detail.generating
+    || candidates.some((c) => !c.latest_run || !TERMINAL.has(c.latest_run.status));
+  const busyTitle = busy ? "Wait for generation and runs to finish" : null;
+
+  main.append(el("div", { class: "panel" },
+    el("div", { class: "card-head" },
+      el("h2", {}, "Task"), el("span", { class: "muted" }, shortId(task.id)),
+      detail.generating ? badge("generating") : null,
+      el("span", { class: "muted" }, new Date(task.created_at).toLocaleString()),
+      el("span", { class: "task-actions" },
+        el("button", { type: "button", disabled: busy || !candidates.length, title: busyTitle,
+          onclick: () => rerunTask(task.id, null) }, "Rerun all"),
+        el("button", { type: "button", disabled: busy || task.id in state.testsDraft, title: busyTitle,
+          onclick: () => { state.testsDraft[task.id] = task.tests; renderDetail(detail); } }, "Edit tests & rerun"),
+        el("button", { type: "button", class: "danger", disabled: busy, title: busyTitle,
+          onclick: () => deleteTask(task) }, "Delete task"))),
+    el("div", { class: "prompt-text" }, task.prompt),
+    task.id in state.testsDraft
+      ? renderTestsEditor(task, detail, busy)
+      : el("details", {}, el("summary", {}, "Hidden tests"), el("pre", {}, task.tests)),
+  ));
+
+  if (!candidates.length) {
+    main.append(el("div", { class: "empty" }, detail.generating ? "Generating candidates..." : "No candidates."));
+    return;
+  }
+
+  const labelOf = Object.fromEntries(candidates.map((c, i) => [c.id, `Candidate ${i + 1}`]));
+  candidates.forEach((c, i) => main.append(renderCandidate(task, c, i, latestAnnotation(annotations, c.id), labelOf, detail)));
+  main.append(renderPreferenceBar(task, candidates, preferences));
+  main.scrollTop = scroll;
+}
+
+function renderTestsEditor(task, detail, busy) {
+  const area = el("textarea", {
+    class: "code", rows: Math.min(20, Math.max(6, state.testsDraft[task.id].split("\n").length + 1)),
+    oninput: (e) => { state.testsDraft[task.id] = e.target.value; },
+  });
+  area.value = state.testsDraft[task.id];
+  return el("div", { class: "editor" },
+    el("div", { class: "muted" }, "Hidden tests: saving replaces them for this task and reruns every candidate. Earlier runs are kept."),
+    area,
+    el("div", { class: "row" },
+      el("button", { type: "button", class: "primary", disabled: busy,
+        onclick: () => rerunTask(task.id, state.testsDraft[task.id]) }, "Save tests & rerun all"),
+      el("button", { type: "button",
+        onclick: () => { delete state.testsDraft[task.id]; renderDetail(detail); } }, "Cancel")));
+}
+
+function renderCodeEditor(task, c, detail) {
+  const area = el("textarea", {
+    class: "code", rows: Math.min(30, Math.max(6, state.codeDraft[c.id].split("\n").length + 1)),
+    oninput: (e) => { state.codeDraft[c.id] = e.target.value; },
+  });
+  area.value = state.codeDraft[c.id];
+  return el("div", { class: "editor" },
+    el("div", { class: "muted" }, "Runs as a new candidate against the current hidden tests; this one and its labels stay unchanged."),
+    area,
+    el("div", { class: "row" },
+      el("button", { type: "button", class: "primary",
+        onclick: () => runEdited(task.id, c.id, state.codeDraft[c.id]) }, "Run as new candidate"),
+      el("button", { type: "button",
+        onclick: () => { delete state.codeDraft[c.id]; renderDetail(detail); } }, "Cancel")));
+}
+
+function renderCandidate(task, c, index, annotation, labelOf, detail) {
+  const run = c.latest_run;
+  const status = run ? run.status : "queued";
+  const results = run && run.test_results;
+  const tests = (results && results.tests) || [];
+  const editing = c.id in state.codeDraft;
+
+  const head = el("div", { class: "card-head" },
+    el("span", { class: "title" }, `Candidate ${index + 1}`),
+    el("span", { class: "muted" }, `${shortId(c.id)} · ${c.source}`),
+    c.parent_id ? el("span", { class: "badge light" }, `edited from ${labelOf[c.parent_id] || shortId(c.parent_id)}`) : null,
+    badge(status),
+    tests.length ? el("span", { class: "badge light" }, `${results.passed}/${tests.length} tests`) : null,
+    run && run.duration_ms != null && TERMINAL.has(status) ? el("span", { class: "muted" }, `${run.duration_ms} ms`) : null,
+    run && run.exit_code != null ? el("span", { class: "muted" }, `exit ${run.exit_code}`) : null,
+    el("label", { class: "best" },
+      el("input", {
+        type: "radio", name: `best-${task.id}`, value: c.id,
+        checked: state.bestChoice[task.id] === c.id,
+        onchange: () => { state.bestChoice[task.id] = c.id; updatePreferenceButton(); },
+      }), "best"),
+  );
+
+  const body = [
+    el("pre", {}, c.code),
+    editing
+      ? renderCodeEditor(task, c, detail)
+      : el("div", { class: "row edit-row" }, el("button", { type: "button",
+          onclick: () => { state.codeDraft[c.id] = c.code; renderDetail(detail); } }, "Edit & rerun")),
+  ];
+
+  if (tests.length) {
+    body.push(el("table", {},
+      el("thead", {}, el("tr", {}, el("th", {}, "Test"), el("th", {}, "Result"), el("th", {}, "Error"))),
+      el("tbody", {}, tests.map((t) => el("tr", {},
+        el("td", {}, t.name),
+        el("td", { class: t.passed ? "ok" : "bad" }, t.passed ? "pass" : "fail"),
+        el("td", { class: "err" }, t.error || ""),
+      ))),
+    ));
+  }
+
+  if (run && (run.stdout || run.stderr)) {
+    const truncated = results && results.truncated ? " (truncated at 64 KiB)" : "";
+    if (run.stdout) body.push(el("details", {}, el("summary", {}, `stdout${truncated}`), el("pre", { class: "wrap" }, run.stdout)));
+    if (run.stderr) body.push(el("details", { open: status !== "passed" }, el("summary", {}, "stderr / diagnostics"), el("pre", { class: "wrap" }, run.stderr)));
+  }
+
+  const notes = el("textarea", {
+    rows: 2, placeholder: "Notes (optional)",
+    oninput: (e) => { state.notesDraft[c.id] = e.target.value; },
+  });
+  notes.value = state.notesDraft[c.id] ?? (annotation ? annotation.notes || "" : "");
+
+  const buttons = LABELS.map((label) => el("button", {
+    type: "button", class: "label-btn" + (annotation && annotation.label === label ? " active" : ""),
+    "data-label": label,
+    onclick: () => annotate(task.id, c.id, label, notes.value),
+  }, label));
+
+  body.push(el("div", { class: "annotate" },
+    el("div", { class: "row" }, el("span", { class: "muted" }, "Label:"), buttons,
+      annotation ? el("span", { class: "muted" }, `saved ${new Date(annotation.created_at).toLocaleTimeString()}`) : null),
+    notes,
+  ));
+
+  return el("div", { class: "panel" }, head, body);
+}
+
+function renderPreferenceBar(task, candidates, preferences) {
+  const byId = Object.fromEntries(candidates.map((c, i) => [c.id, `Candidate ${i + 1}`]));
+  const existing = preferences.length
+    ? el("div", { class: "muted" }, "Saved: ", preferences.map((p, i) =>
+        [i ? "; " : "", `${byId[p.chosen_candidate_id] || shortId(p.chosen_candidate_id)} over ${byId[p.rejected_candidate_id] || shortId(p.rejected_candidate_id)}`]))
+    : null;
+  return el("div", { class: "panel pref-bar" },
+    el("button", {
+      class: "primary", id: "submit-pref", type: "button",
+      disabled: candidates.length < 2 || !state.bestChoice[task.id],
+      onclick: () => submitPreference(task.id, candidates),
+    }, "Submit best as preference"),
+    el("span", { class: "muted" }, candidates.length < 2
+      ? "Needs at least two candidates."
+      : "Chosen = the candidate marked best; every other candidate is recorded as rejected."),
+    existing,
+  );
+}
+
+function updatePreferenceButton() {
+  const btn = document.getElementById("submit-pref");
+  if (btn) btn.disabled = !state.bestChoice[state.selectedTaskId];
+}
+
+// ── Actions ────────────────────────────────────────────────────────
+
+async function annotate(taskId, candidateId, label, notes) {
+  try {
+    await api(`/tasks/${taskId}/annotations`, {
+      method: "POST", body: JSON.stringify({ candidate_id: candidateId, label, notes: notes || null }),
+    });
+    delete state.notesDraft[candidateId];
+    toast(`Labeled ${label}`);
+    await refresh();
+  } catch (err) {
+    toast(`Label failed: ${err.message}`, true);
+  }
+}
+
+async function rerunTask(taskId, tests) {
+  try {
+    const res = await api(`/tasks/${taskId}/rerun`, {
+      method: "POST", body: JSON.stringify(tests === null ? {} : { tests }),
+    });
+    delete state.testsDraft[taskId];
+    toast(`${res.tests_updated ? "Tests saved; r" : "R"}erunning ${res.runs.length} candidate${res.runs.length === 1 ? "" : "s"}`);
+    state.lastDetailJson = "";
+    await refresh();
+  } catch (err) {
+    toast(`Rerun failed: ${err.message}`, true);
+  }
+}
+
+async function runEdited(taskId, parentId, code) {
+  if (!code.trim()) return toast("Code is empty", true);
+  try {
+    await api(`/tasks/${taskId}/candidates`, {
+      method: "POST", body: JSON.stringify({ code, parent_candidate_id: parentId }),
+    });
+    delete state.codeDraft[parentId];
+    toast("Edited candidate queued");
+    state.lastDetailJson = "";
+    await refresh();
+  } catch (err) {
+    toast(`Run failed: ${err.message}`, true);
+  }
+}
+
+async function deleteTask(task) {
+  const preview = task.prompt.length > 80 ? task.prompt.slice(0, 80) + "..." : task.prompt;
+  if (!confirm(`Delete this task with all its candidates, runs, labels and preferences?\n\n${preview}`)) return;
+  try {
+    await api(`/tasks/${task.id}`, { method: "DELETE" });
+    delete state.bestChoice[task.id];
+    delete state.testsDraft[task.id];
+    state.selectedTaskId = null;
+    state.lastDetailJson = "";
+    state.lastListJson = "";
+    history.replaceState(null, "", location.pathname);
+    document.getElementById("detail").replaceChildren(el("div", { class: "empty" }, "Task deleted. Select another task on the left."));
+    toast("Task deleted");
+    await refresh();
+  } catch (err) {
+    toast(`Delete failed: ${err.message}`, true);
+  }
+}
+
+async function submitPreference(taskId, candidates) {
+  const chosen = state.bestChoice[taskId];
+  const rejected = candidates.map((c) => c.id).filter((id) => id !== chosen);
+  try {
+    const rows = await api(`/tasks/${taskId}/preference`, {
+      method: "POST", body: JSON.stringify({ chosen_candidate_id: chosen, rejected_candidate_ids: rejected }),
+    });
+    toast(`Saved ${rows.length} preference pair${rows.length === 1 ? "" : "s"}`);
+    await refresh();
+  } catch (err) {
+    toast(`Preference failed: ${err.message}`, true);
+  }
+}
+
+document.getElementById("new-task-toggle").addEventListener("click", () => {
+  const form = document.getElementById("new-task-form");
+  form.hidden = !form.hidden;
+});
+
+document.getElementById("new-task-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const data = new FormData(form);
+  const button = form.querySelector("button[type=submit]");
+  button.disabled = true;
+  try {
+    const created = await api("/tasks", {
+      method: "POST",
+      body: JSON.stringify({
+        prompt: data.get("prompt"), tests: data.get("tests"),
+        n_candidates: Number(data.get("n_candidates") || 3),
+      }),
+    });
+    form.hidden = true;
+    form.reset();
+    toast("Task created; generating candidates");
+    selectTask(created.task_id);
+  } catch (err) {
+    toast(`Create failed: ${err.message}`, true);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.getElementById("include-raw").addEventListener("change", (e) => {
+  state.includeRaw = e.target.checked;
+  state.lastListJson = "";
+  refresh();
+});
+
+// ── Refresh loop: fast while anything is queued/running/generating ──
+
+async function refresh() {
+  clearTimeout(state.timer);
+  let active = false;
+  try {
+    const [tasks, detail, health] = await Promise.all([
+      loadTasks(), loadDetail(), api("/healthz").catch(() => null),
+    ]);
+    active = tasks.some((t) => t.generating || t.pending_count > 0)
+      || Boolean(detail && (detail.generating || detail.candidates.some((c) => !c.latest_run || !TERMINAL.has(c.latest_run.status))));
+    if (health && health.pool) {
+      const p = health.pool;
+      document.getElementById("pool").textContent =
+        `sandbox pool: ${p.in_flight}/${p.max_concurrent} running, ${p.waiting} waiting`;
+    }
+  } catch (err) {
+    toast(`Refresh failed: ${err.message}`, true);
+  }
+  state.timer = setTimeout(refresh, active ? ACTIVE_POLL_MS : IDLE_POLL_MS);
+}
+
+refresh();
+</script>
 </body>
 </html>

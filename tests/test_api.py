@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import pytest
 from fastapi.testclient import TestClient
 
-from app import db, executor, llm
+from app import db, executor, llm, main
 from app.main import app
 from app.worker import WorkerPool
 
@@ -24,7 +24,7 @@ def _tmp_db(tmp_path, monkeypatch):
 @pytest.fixture
 def fake_pipeline(monkeypatch):
     """Mock LLM returns distinct candidates; mock executor marks every run passed."""
-    calls = {"llm": [], "executed": []}
+    calls = {"llm": [], "executed": [], "tests": []}
 
     def fake_generate(prompt, n):
         calls["llm"].append((prompt, n))
@@ -32,6 +32,7 @@ def fake_pipeline(monkeypatch):
 
     async def fake_execute(run_id, code, tests):
         calls["executed"].append(run_id)
+        calls["tests"].append(tests)
         return db.update_run(
             run_id,
             status="passed",
@@ -164,6 +165,192 @@ def test_preference_one_row_per_rejected(client, fake_pipeline):
 
     bad = client.post(f"/tasks/{task_id}/preference", json={"chosen_candidate_id": a, "rejected_candidate_ids": [a]})
     assert bad.status_code == 400
+
+
+def test_preferences_listed_on_task_detail(client, fake_pipeline):
+    task_id = create_task(client, n=2)
+    a, b = (x["id"] for x in client.get(f"/tasks/{task_id}").json()["candidates"])
+    client.post(f"/tasks/{task_id}/preference", json={"chosen_candidate_id": a, "rejected_candidate_ids": [b]})
+
+    prefs = client.get(f"/tasks/{task_id}").json()["preferences"]
+    assert [(p["chosen_candidate_id"], p["rejected_candidate_id"]) for p in prefs] == [(a, b)]
+
+
+# ── Export ─────────────────────────────────────────────────────────
+
+def test_export_preferences_jsonl(client, fake_pipeline):
+    task_id = create_task(client, n=3)
+    a, b, c = client.get(f"/tasks/{task_id}").json()["candidates"]
+    client.post(f"/tasks/{task_id}/preference",
+                json={"chosen_candidate_id": a["id"], "rejected_candidate_ids": [b["id"], c["id"]]})
+
+    resp = client.get("/export/preferences.jsonl")
+    assert resp.status_code == 200
+    assert resp.headers["content-type"].startswith("application/x-ndjson")
+    assert 'filename="preferences.jsonl"' in resp.headers["content-disposition"]
+
+    lines = resp.text.splitlines()
+    assert len(lines) == 2
+    records = [json.loads(line) for line in lines]
+    first = records[0]
+    assert first["task_id"] == task_id
+    assert first["prompt"] == "write fizzbuzz(n)"
+    assert first["chosen"]["candidate_id"] == a["id"]
+    assert first["chosen"]["code"] == a["code"]
+    assert first["chosen"]["run"]["status"] == "passed"
+    assert first["chosen"]["run"]["test_results"]["passed"] == 1
+    assert [r["rejected"]["candidate_id"] for r in records] == [b["id"], c["id"]]
+    assert all(r["identical_code"] is False for r in records)
+
+
+def test_export_flags_identical_code(client, monkeypatch, fake_pipeline):
+    monkeypatch.setattr(llm, "generate_candidates", lambda prompt, n: ["def fizzbuzz(n):\n    return []\n"] * n)
+    task_id = create_task(client, n=2)
+    a, b = (x["id"] for x in client.get(f"/tasks/{task_id}").json()["candidates"])
+    client.post(f"/tasks/{task_id}/preference", json={"chosen_candidate_id": a, "rejected_candidate_ids": [b]})
+
+    record = json.loads(client.get("/export/preferences.jsonl").text)
+    assert record["identical_code"] is True
+
+
+def test_export_empty_when_no_preferences(client):
+    resp = client.get("/export/preferences.jsonl")
+    assert resp.status_code == 200
+    assert resp.text == ""
+
+
+# ── Delete / rerun / edit ──────────────────────────────────────────
+
+def wait_all_terminal(client, task_id, timeout=5.0) -> dict:
+    deadline = time.monotonic() + timeout
+    while True:
+        detail = client.get(f"/tasks/{task_id}").json()
+        if all(c["latest_run"]["status"] not in ("queued", "running") for c in detail["candidates"]):
+            return detail
+        assert time.monotonic() < deadline, detail
+        time.sleep(0.02)
+
+
+def test_delete_task_removes_everything_it_owns(client, fake_pipeline):
+    keep_id = create_task(client, n=2)
+    task_id = create_task(client, n=2)
+    ids = [c["id"] for c in client.get(f"/tasks/{task_id}").json()["candidates"]]
+    client.post(f"/tasks/{task_id}/annotations", json={"candidate_id": ids[0], "label": "correct"})
+    client.post(f"/tasks/{task_id}/preference", json={"chosen_candidate_id": ids[0], "rejected_candidate_ids": [ids[1]]})
+
+    assert client.delete(f"/tasks/{task_id}").status_code == 204
+
+    assert client.get(f"/tasks/{task_id}").status_code == 404
+    assert [t["id"] for t in client.get("/tasks").json()] == [keep_id]
+    assert client.get("/export/preferences.jsonl").text == ""
+    conn = db._get_conn()
+    for table in ("candidates", "annotations", "preferences"):
+        assert conn.execute(f"SELECT COUNT(*) FROM {table} WHERE task_id = ?", (task_id,)).fetchone()[0] == 0
+    assert conn.execute(f"SELECT COUNT(*) FROM runs WHERE candidate_id IN ({','.join('?' * len(ids))})", ids).fetchone()[0] == 0
+    conn.close()
+    assert len(client.get(f"/tasks/{keep_id}").json()["candidates"]) == 2
+    assert client.delete(f"/tasks/{task_id}").status_code == 404
+
+
+def test_delete_and_rerun_refused_while_runs_in_flight(client, fake_pipeline):
+    task_id = create_task(client, n=1)
+    candidate_id = client.get(f"/tasks/{task_id}").json()["candidates"][0]["id"]
+    db.insert_run(candidate_id)  # latest run left queued, as if still waiting for a slot
+
+    assert client.delete(f"/tasks/{task_id}").status_code == 409
+    assert client.post(f"/tasks/{task_id}/rerun", json={}).status_code == 409
+    assert client.get(f"/tasks/{task_id}").status_code == 200
+
+
+def test_rerun_queues_new_run_per_candidate_and_keeps_history(client, fake_pipeline):
+    task_id = create_task(client, n=2)
+    before = {c["id"]: c["latest_run"]["id"] for c in client.get(f"/tasks/{task_id}").json()["candidates"]}
+
+    resp = client.post(f"/tasks/{task_id}/rerun")
+    assert resp.status_code == 202, resp.text
+    assert resp.json()["tests_updated"] is False
+    assert {r["candidate_id"] for r in resp.json()["runs"]} == set(before)
+
+    detail = wait_all_terminal(client, task_id)
+    for c in detail["candidates"]:
+        assert c["latest_run"]["id"] != before[c["id"]]
+        assert c["latest_run"]["status"] == "passed"
+        assert client.get(f"/runs/{before[c['id']]}").json()["status"] == "passed"
+    assert fake_pipeline["tests"][-2:] == [FIZZ_TESTS, FIZZ_TESTS]
+
+
+def test_rerun_with_edited_tests_updates_task(client, fake_pipeline):
+    task_id = create_task(client, n=2)
+    new_tests = FIZZ_TESTS + "\ndef test_five():\n    assert fizzbuzz(5)[-1] == 'Buzz'\n"
+
+    resp = client.post(f"/tasks/{task_id}/rerun", json={"tests": new_tests})
+    assert resp.status_code == 202, resp.text
+    assert resp.json()["tests_updated"] is True
+
+    wait_all_terminal(client, task_id)
+    assert client.get(f"/tasks/{task_id}").json()["task"]["tests"] == new_tests
+    assert fake_pipeline["tests"][-2:] == [new_tests, new_tests]
+    assert client.post(f"/tasks/{task_id}/rerun", json={"tests": ""}).status_code == 422
+
+
+def test_edit_and_rerun_creates_linked_candidate(client, fake_pipeline):
+    task_id = create_task(client, n=2)
+    original = client.get(f"/tasks/{task_id}").json()["candidates"][0]
+    client.post(f"/tasks/{task_id}/annotations", json={"candidate_id": original["id"], "label": "incorrect"})
+    edited_code = "def fizzbuzz(n):\n    return ['Fizz']\n"
+
+    resp = client.post(f"/tasks/{task_id}/candidates", json={"code": edited_code, "parent_candidate_id": original["id"]})
+    assert resp.status_code == 202, resp.text
+    new = resp.json()["candidate"]
+    assert (new["source"], new["parent_id"], new["code"]) == ("edited", original["id"], edited_code)
+
+    detail = wait_all_terminal(client, task_id)
+    assert [c["id"] for c in detail["candidates"]][-1] == new["id"]
+    assert detail["candidates"][-1]["latest_run"]["status"] == "passed"
+    assert detail["candidates"][0]["code"] == original["code"]
+    assert [a["candidate_id"] for a in detail["annotations"]] == [original["id"]]
+    assert fake_pipeline["tests"][-1] == FIZZ_TESTS
+
+
+def test_edit_and_rerun_validates_input(client, fake_pipeline):
+    task_id = create_task(client, n=1)
+    other_id = create_task(client, n=1)
+    foreign = client.get(f"/tasks/{other_id}").json()["candidates"][0]["id"]
+
+    assert client.post(f"/tasks/{task_id}/candidates", json={"code": "x = 1", "parent_candidate_id": foreign}).status_code == 400
+    assert client.post(f"/tasks/{task_id}/candidates", json={"code": ""}).status_code == 422
+    assert client.post("/tasks/nope/candidates", json={"code": "x = 1"}).status_code == 404
+
+
+def test_init_db_migrates_pre_edit_candidates_table(tmp_path, monkeypatch):
+    import sqlite3
+
+    path = tmp_path / "old.db"
+    old = sqlite3.connect(path)
+    old.executescript(
+        db.SCHEMA.replace(",\n    parent_id TEXT\n", "\n").replace(",'edited'", "")
+        + "INSERT INTO tasks VALUES ('t1', 'p', 'tests', 'now');"
+        "INSERT INTO candidates VALUES ('c1', 't1', 'llm', 'code', 'now');"
+        "INSERT INTO runs (id, candidate_id, status) VALUES ('r1', 'c1', 'passed');"
+    )
+    old.close()
+    monkeypatch.setattr(db, "DB_PATH", path)
+
+    db.init_db()
+    db.init_db()
+
+    assert db.get_candidate("c1")["parent_id"] is None
+    assert db.get_latest_run_for_candidate("c1")["id"] == "r1"
+    edited = db.insert_candidate("t1", "edited", "code2", parent_id="c1")
+    assert [c["id"] for c in db.get_candidates_for_task("t1")] == ["c1", edited["id"]]
+
+
+def test_ui_never_uses_innerhtml():
+    """Candidate code and outputs are untrusted; the UI must only insert them as text."""
+    html = (main.STATIC_DIR / "index.html").read_text()
+    for sink in (".innerHTML", ".outerHTML", "insertAdjacentHTML", "document.write"):
+        assert sink not in html, sink
+    assert "/export/preferences.jsonl" in html
 
 
 # ── Worker pool / recovery ─────────────────────────────────────────

@@ -1,14 +1,14 @@
 {
-  "id": "4b9a0125824540fd",
-  "candidate_id": "1c168c0290974d4f",
-  "job_name": "run-93eeb2fe",
+  "id": "f563383e285a4a4c",
+  "candidate_id": "fa037d0f83194127",
+  "job_name": "run-d8e3a864",
   "status": "passed",
   "exit_code": 0,
   "stdout": "",
   "stderr": "",
-  "duration_ms": 5677,
-  "started_at": "2026-09-30T05:36:59.865826+00:00",
-  "finished_at": "2026-09-30T05:37:05.544257+00:00",
+  "duration_ms": 4536,
+  "started_at": "2026-09-30T05:45:05.712063+00:00",
+  "finished_at": "2026-09-30T05:45:10.249356+00:00",
   "test_results": {
     "tests": [
       {

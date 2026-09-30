@@ -1,29 +1,29 @@
 {
   "task": {
-    "id": "7ad68b7f27f746f3",
+    "id": "680861c1c84a4a8f",
     "prompt": "Write a Python function `fizzbuzz(n)` that returns a list of strings for the numbers 1..n: \"Fizz\" for multiples of 3, \"Buzz\" for multiples of 5, \"FizzBuzz\" for multiples of both, otherwise the number as a string.",
     "tests": "from solution import fizzbuzz\n\ndef test_first_five():\n    assert fizzbuzz(5) == [\"1\", \"2\", \"Fizz\", \"4\", \"Buzz\"]\n\ndef test_fifteen():\n    assert fizzbuzz(15)[-1] == \"FizzBuzz\"\n\ndef test_length_and_zero():\n    assert len(fizzbuzz(30)) == 30\n    assert fizzbuzz(0) == []\n",
-    "created_at": "2026-09-30T05:36:59.877195+00:00"
+    "created_at": "2026-09-30T05:45:05.727685+00:00"
   },
   "generating": false,
   "candidates": [
     {
-      "id": "afe7fc414ad045b6",
-      "task_id": "7ad68b7f27f746f3",
+      "id": "47a87bbfc20b4603",
+      "task_id": "680861c1c84a4a8f",
       "source": "llm",
       "code": "def fizzbuzz(n):\n    return [\"FizzBuzz\" if i % 15 == 0 else \"Fizz\" if i % 3 == 0 else \"Buzz\" if i % 5 == 0 else str(i) for i in range(1, n+1)]\n",
-      "created_at": "2026-09-30T05:37:02.679461+00:00",
+      "created_at": "2026-09-30T05:45:07.997277+00:00",
       "latest_run": {
-        "id": "48993292e32e4e74",
-        "candidate_id": "afe7fc414ad045b6",
-        "job_name": "run-7a3efe59",
+        "id": "93bef2a62af24d60",
+        "candidate_id": "47a87bbfc20b4603",
+        "job_name": "run-8c614d57",
         "status": "passed",
         "exit_code": 0,
         "stdout": "",
         "stderr": "",
-        "duration_ms": 5512,
-        "started_at": "2026-09-30T05:37:02.686501+00:00",
-        "finished_at": "2026-09-30T05:37:08.200562+00:00",
+        "duration_ms": 5457,
+        "started_at": "2026-09-30T05:45:08.004502+00:00",
+        "finished_at": "2026-09-30T05:45:13.462634+00:00",
         "test_results": {
           "tests": [
             {
@@ -49,22 +49,22 @@
       }
     },
     {
-      "id": "0bef7aef6baa410a",
-      "task_id": "7ad68b7f27f746f3",
+      "id": "e74c76d8cb5f4851",
+      "task_id": "680861c1c84a4a8f",
       "source": "llm",
-      "code": "def fizzbuzz(n):\n    return [\n        \"FizzBuzz\" if i % 15 == 0 else\n        \"Fizz\" if i % 3 == 0 else\n        \"Buzz\" if i % 5 == 0 else\n        str(i)\n        for i in range(1, n+1)\n    ]\n",
-      "created_at": "2026-09-30T05:37:02.681905+00:00",
+      "code": "def fizzbuzz(n):\n    return [\"FizzBuzz\" if i % 15 == 0 else \"Fizz\" if i % 3 == 0 else \"Buzz\" if i % 5 == 0 else str(i) for i in range(1, n+1)]\n",
+      "created_at": "2026-09-30T05:45:08.000175+00:00",
       "latest_run": {
-        "id": "189acefae6c748f5",
-        "candidate_id": "0bef7aef6baa410a",
-        "job_name": "run-654af5fe",
+        "id": "312b53e742704e4b",
+        "candidate_id": "e74c76d8cb5f4851",
+        "job_name": "run-8fd7e272",
         "status": "passed",
         "exit_code": 0,
         "stdout": "",
         "stderr": "",
-        "duration_ms": 5515,
-        "started_at": "2026-09-30T05:37:02.686531+00:00",
-        "finished_at": "2026-09-30T05:37:08.204018+00:00",
+        "duration_ms": 5457,
+        "started_at": "2026-09-30T05:45:08.004546+00:00",
+        "finished_at": "2026-09-30T05:45:13.467056+00:00",
         "test_results": {
           "tests": [
             {
@@ -90,22 +90,22 @@
       }
     },
     {
-      "id": "eae08d06cb6b4d3c",
-      "task_id": "7ad68b7f27f746f3",
+      "id": "b638256cf1624775",
+      "task_id": "680861c1c84a4a8f",
       "source": "llm",
       "code": "def fizzbuzz(n):\n    return [\"FizzBuzz\" if i % 15 == 0 else \"Fizz\" if i % 3 == 0 else \"Buzz\" if i % 5 == 0 else str(i) for i in range(1, n+1)]\n",
-      "created_at": "2026-09-30T05:37:02.684816+00:00",
+      "created_at": "2026-09-30T05:45:08.002621+00:00",
       "latest_run": {
-        "id": "c42653327b2f4750",
-        "candidate_id": "eae08d06cb6b4d3c",
-        "job_name": "run-2efcc188",
+        "id": "bc6cc44a09e04839",
+        "candidate_id": "b638256cf1624775",
+        "job_name": "run-2df89dfb",
         "status": "passed",
         "exit_code": 0,
         "stdout": "",
         "stderr": "",
-        "duration_ms": 5510,
-        "started_at": "2026-09-30T05:37:02.686552+00:00",
-        "finished_at": "2026-09-30T05:37:08.202391+00:00",
+        "duration_ms": 4365,
+        "started_at": "2026-09-30T05:45:08.004585+00:00",
+        "finished_at": "2026-09-30T05:45:12.372757+00:00",
         "test_results": {
           "tests": [
             {
@@ -133,28 +133,28 @@
   ],
   "annotations": [
     {
-      "id": "4d153455c05d4c4a",
-      "task_id": "7ad68b7f27f746f3",
-      "candidate_id": "afe7fc414ad045b6",
+      "id": "573ebedf332c42a5",
+      "task_id": "680861c1c84a4a8f",
+      "candidate_id": "47a87bbfc20b4603",
       "label": "correct",
       "notes": "demo: run status was passed",
-      "created_at": "2026-09-30T05:37:09.209211+00:00"
+      "created_at": "2026-09-30T05:45:13.991755+00:00"
     },
     {
-      "id": "319f2125b9f3432e",
-      "task_id": "7ad68b7f27f746f3",
-      "candidate_id": "0bef7aef6baa410a",
+      "id": "66d6905b9ee2428b",
+      "task_id": "680861c1c84a4a8f",
+      "candidate_id": "e74c76d8cb5f4851",
       "label": "correct",
       "notes": "demo: run status was passed",
-      "created_at": "2026-09-30T05:37:09.220829+00:00"
+      "created_at": "2026-09-30T05:45:14.002946+00:00"
     },
     {
-      "id": "dd0d7c5674594af2",
-      "task_id": "7ad68b7f27f746f3",
-      "candidate_id": "eae08d06cb6b4d3c",
+      "id": "19b3f41900e842dd",
+      "task_id": "680861c1c84a4a8f",
+      "candidate_id": "b638256cf1624775",
       "label": "correct",
       "notes": "demo: run status was passed",
-      "created_at": "2026-09-30T05:37:09.239083+00:00"
+      "created_at": "2026-09-30T05:45:14.016091+00:00"
     }
   ]
 }
