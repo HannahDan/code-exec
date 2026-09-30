@@ -183,6 +183,7 @@ configuration only.
 | [`artifacts/demo_output.txt`](artifacts/demo_output.txt) | `make demo` transcript: raw run, LLM task, annotations, preference |
 | [`artifacts/demo_task.json`](artifacts/demo_task.json), [`demo_raw_run.json`](artifacts/demo_raw_run.json), [`demo_tasks_list.json`](artifacts/demo_tasks_list.json) | API responses captured by the demo |
 | [`artifacts/demo_kubectl.txt`](artifacts/demo_kubectl.txt), [`demo_server.log`](artifacts/demo_server.log) | Jobs and pods in the cluster after the demo; server log |
-| [`artifacts/preferences.jsonl`](artifacts/preferences.jsonl) | Export from an annotation session: 9 pairs, 2 of them flagged `identical_code` |
+| [`artifacts/preferences.jsonl`](artifacts/preferences.jsonl) | Export written by `make demo`: 2 pairs, all 3 fizzbuzz candidates passing 3/3 |
+| [`artifacts/preferences_session.jsonl`](artifacts/preferences_session.jsonl) | Export from a manual annotation session: 9 pairs, including an edited candidate that fails a test and 2 pairs flagged `identical_code` |
 | [`artifacts/ui_screenshot.png`](artifacts/ui_screenshot.png) | The annotator UI showing an edited candidate |
 | [`NOTES.md`](NOTES.md) | Decisions, issues hit, and findings per milestone |
