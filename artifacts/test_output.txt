@@ -41,7 +41,7 @@ tests/test_executor.py::test_happy_path PASSED                           [ 70%]
 tests/test_executor.py::test_wrong_answer PASSED                         [ 72%]
 tests/test_executor.py::test_timeout PASSED                              [ 74%]
 tests/test_executor.py::test_post_runs_end_to_end PASSED                 [ 76%]
-tests/test_executor.py::test_concurrency_twelve_runs_bounded FAILED      [ 78%]
+tests/test_executor.py::test_concurrency_twelve_runs_bounded PASSED      [ 78%]
 tests/test_executor.py::test_recovery_reattaches_job_after_restart PASSED [ 80%]
 tests/test_executor.py::test_syntax_error PASSED                         [ 82%]
 tests/test_executor.py::test_memory_bomb PASSED                          [ 85%]
@@ -53,74 +53,15 @@ tests/test_executor.py::test_read_only_filesystem PASSED                 [ 95%]
 tests/test_executor.py::test_huge_stdout_is_truncated PASSED             [ 97%]
 tests/test_executor.py::test_outbound_network XFAIL (NetworkPolicy n...) [100%]
 
-=================================== FAILURES ===================================
-_____________________ test_concurrency_twelve_runs_bounded _____________________
-
-monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11f43cb80>
-
-    def test_concurrency_twelve_runs_bounded(monkeypatch):
-        monkeypatch.setenv("MAX_CONCURRENT_JOBS", "4")
-        code = "import time\n\ndef add(a, b):\n    time.sleep(1)\n    return a + b\n"
-        observed = []
-        stop = threading.Event()
-        run_ids: set[str] = set()
-    
-        def watch_cluster():
-            while not stop.is_set():
-                try:
-                    observed.append(_unfinished_jobs(run_ids))
-                except Exception:
-                    pass
-                stop.wait(0.3)
-    
-        started = time.monotonic()
-        with TestClient(app) as client:
-            watcher = threading.Thread(target=watch_cluster, daemon=True)
-            watcher.start()
-            for _ in range(12):
-                run_ids.add(client.post("/runs", json={"code": code, "tests": ADD_TESTS}).json()["id"])
-            rows = wait_terminal(client, run_ids, timeout=180)
-            stats = client.get("/healthz").json()["pool"]
-            stop.set()
-            watcher.join()
-        wall = time.monotonic() - started
-    
-        statuses = sorted(r["status"] for r in rows.values())
-        OBSERVED["concurrency"] = {
-            "runs": len(rows),
-            "statuses": statuses,
-            "max_concurrent_jobs": stats["max_concurrent"],
-            "pool_peak_in_flight": stats["peak_in_flight"],
-            "cluster_peak_unfinished_jobs": max(observed, default=0),
-            "cluster_samples": len(observed),
-            "wall_seconds": round(wall, 1),
-        }
-        assert len(rows) == 12
->       assert statuses == ["passed"] * 12, statuses
-E       AssertionError: ['passed', 'passed', 'passed', 'passed', 'passed', 'passed', ...]
-E       assert ['passed', 'p...'passed', ...] == ['passed', 'p...'passed', ...]
-E         
-E         At index 10 diff: 'timeout' != 'passed'
-E         
-E         Full diff:
-E           [
-E               'passed',
-E               'passed',...
-E         
-E         ...Full output truncated (13 lines hidden), use '-vv' to show
-
-tests/test_executor.py:177: AssertionError
 =============================== warnings summary ===============================
 ../../../Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/fastapi/testclient.py:1
   /Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
     from starlette.testclient import TestClient as TestClient  # noqa
 
 tests/test_api.py: 1 warning
-tests/test_executor.py: 872 warnings
+tests/test_executor.py: 873 warnings
   /Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/kubernetes/client/rest.py:47: DeprecationWarning: HTTPResponse.getheader() is deprecated and will be removed in urllib3 v2.1.0. Instead use HTTPResponse.headers.get(name, default).
     return self.urllib3_response.getheader(name, default)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-=========================== short test summary info ============================
-FAILED tests/test_executor.py::test_concurrency_twelve_runs_bounded - Asserti...
-====== 1 failed, 45 passed, 1 xfailed, 874 warnings in 105.13s (0:01:45) =======
+=========== 46 passed, 1 xfailed, 875 warnings in 107.06s (0:01:47) ============
