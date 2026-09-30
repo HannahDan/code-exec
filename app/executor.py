@@ -334,9 +334,12 @@ async def _wait_and_collect(result: RunResult, run_id: str, start: float) -> Non
         terminated = cs.last_state.terminated
 
     if cond_type == "Failed" and cond_reason == "DeadlineExceeded":
-        if not saw_container_start and last_waiting_reason in IMAGE_PULL_REASONS:
+        # The deadline counts from Job start, so a pod that never ran (unschedulable,
+        # image pull) hits it too; that's the cluster's failure, not the code's.
+        if not saw_container_start:
             result.status = "infra_error"
-            _append_stderr(result, f"deadline exceeded while pod was in {last_waiting_reason}")
+            where = last_waiting_reason or (pod.status.phase if pod and pod.status else "no pod")
+            _append_stderr(result, f"deadline exceeded before the container started ({where})")
         else:
             result.status = "timeout"
             _append_stderr(result, f"killed after activeDeadlineSeconds={ACTIVE_DEADLINE_SECONDS}")
