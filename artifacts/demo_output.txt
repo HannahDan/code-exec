@@ -1,46 +1,46 @@
 
-[22:36:58] kubectl context: docker-desktop
+[23:32:13] kubectl context: docker-desktop
 
-[22:36:58] 1. Applying k8s manifests
+[23:32:13] 1. Applying k8s manifests
 namespace/sandbox unchanged
 networkpolicy.networking.k8s.io/deny-all-code-runner unchanged
 
-[22:36:58] 2. Starting server on :8765 (log: artifacts/demo_server.log)
+[23:32:13] 2. Starting server on :8765 (log: artifacts/demo_server.log)
 {"status":"ok","pool":{"max_concurrent":4,"in_flight":0,"waiting":0,"peak_in_flight":0}}
 
-[22:36:59] 3a. Submitting raw run (POST /runs)
-raw run id: 4b9a0125824540fd
+[23:32:14] 3a. Submitting raw run (POST /runs)
+raw run id: 54a055ae6fba42c5
 
-[22:36:59] 3b. Submitting LLM task (POST /tasks, fizzbuzz, n_candidates=3)
-task id: 7ad68b7f27f746f3
+[23:32:14] 3b. Submitting LLM task (POST /tasks, fizzbuzz, n_candidates=3)
+task id: 93bac50bc6fd4cc9
 
-[22:36:59] 4. Waiting for runs to finish
+[23:32:14] 4. Waiting for runs to finish
 raw run status: passed
-candidate afe7fc414ad045b6: passed (3 passed, 0 failed, 5512 ms)
-candidate 0bef7aef6baa410a: passed (3 passed, 0 failed, 5515 ms)
-candidate eae08d06cb6b4d3c: passed (3 passed, 0 failed, 5510 ms)
+candidate c661e3cb982044b9: passed (3 passed, 0 failed, 4391 ms)
+candidate bceafc8174ab4d2f: passed (3 passed, 0 failed, 4392 ms)
+candidate 8a4616584a0a42e5: passed (3 passed, 0 failed, 4391 ms)
 
-[22:37:09] 4b. Posting annotations and a preference
-{"candidate_id":"afe7fc414ad045b6","label":"correct","notes":"demo: run status was passed"}
-{"candidate_id":"0bef7aef6baa410a","label":"correct","notes":"demo: run status was passed"}
-{"candidate_id":"eae08d06cb6b4d3c","label":"correct","notes":"demo: run status was passed"}
-{"chosen_candidate_id":"afe7fc414ad045b6","rejected_candidate_id":"0bef7aef6baa410a"}
-{"chosen_candidate_id":"afe7fc414ad045b6","rejected_candidate_id":"eae08d06cb6b4d3c"}
+[23:32:21] 4b. Posting annotations and a preference
+{"candidate_id":"c661e3cb982044b9","label":"correct","notes":"demo: run status was passed"}
+{"candidate_id":"bceafc8174ab4d2f","label":"correct","notes":"demo: run status was passed"}
+{"candidate_id":"8a4616584a0a42e5","label":"correct","notes":"demo: run status was passed"}
+{"chosen_candidate_id":"c661e3cb982044b9","rejected_candidate_id":"bceafc8174ab4d2f"}
+{"chosen_candidate_id":"c661e3cb982044b9","rejected_candidate_id":"8a4616584a0a42e5"}
 
-[22:37:09] 5. Saving evidence to artifacts/
-preferences export endpoint not available yet (added in M6)
+[23:32:21] 5. Saving evidence to artifacts/
+preferences export: 2 line(s)
 
-[22:37:09] 6. kubectl get jobs,pods -n sandbox -o wide
+[23:32:21] 6. kubectl get jobs,pods -n sandbox -o wide
 NAME                     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES             SELECTOR
-job.batch/run-2efcc188   1/1           5s         7s    runner       python:3.12-slim   controller-uid=36dff263-490f-4b4c-9278-c744920f90a6
-job.batch/run-654af5fe   1/1           5s         7s    runner       python:3.12-slim   controller-uid=ec4d8179-3e8b-4651-a2af-85c90c6fb53c
-job.batch/run-7a3efe59   1/1           5s         7s    runner       python:3.12-slim   controller-uid=ee97f633-e903-485e-a5e8-47e7344f81e5
-job.batch/run-93eeb2fe   1/1           5s         10s   runner       python:3.12-slim   controller-uid=870b2c60-d2ca-4a46-b03e-eb5c881a1f73
+job.batch/run-70960aed   1/1           5s         5s    runner       python:3.12-slim   controller-uid=18ce12c5-8362-41d3-bde1-ac0d5e8891f4
+job.batch/run-8f322845   1/1           4s         7s    runner       python:3.12-slim   controller-uid=39ef62df-238f-47c2-aa4b-5675610bad36
+job.batch/run-afd8d491   1/1           5s         5s    runner       python:3.12-slim   controller-uid=30023217-839f-4fd8-ba5d-a63b3896d6a1
+job.batch/run-d2d9d932   1/1           5s         5s    runner       python:3.12-slim   controller-uid=6d26161d-c1f9-4e68-8b85-c2aca74fa205
 
 NAME                     READY   STATUS      RESTARTS   AGE   IP           NODE             NOMINATED NODE   READINESS GATES
-pod/run-2efcc188-jqgjr   0/1     Completed   0          7s    10.1.0.130   docker-desktop   <none>           <none>
-pod/run-654af5fe-cs5qs   0/1     Completed   0          7s    10.1.0.129   docker-desktop   <none>           <none>
-pod/run-7a3efe59-kg75r   0/1     Completed   0          7s    10.1.0.128   docker-desktop   <none>           <none>
-pod/run-93eeb2fe-zsrqn   0/1     Completed   0          10s   10.1.0.127   docker-desktop   <none>           <none>
+pod/run-70960aed-fjl5g   0/1     Completed   0          5s    10.1.0.225   docker-desktop   <none>           <none>
+pod/run-8f322845-h9jhw   0/1     Completed   0          7s    10.1.0.223   docker-desktop   <none>           <none>
+pod/run-afd8d491-h6fdx   0/1     Completed   0          5s    10.1.0.226   docker-desktop   <none>           <none>
+pod/run-d2d9d932-kdrq4   0/1     Completed   0          5s    10.1.0.224   docker-desktop   <none>           <none>
 
-[22:37:09] Done. task=7ad68b7f27f746f3 raw_run=4b9a0125824540fd best=afe7fc414ad045b6
+[23:32:21] Done. task=93bac50bc6fd4cc9 raw_run=54a055ae6fba42c5 best=c661e3cb982044b9

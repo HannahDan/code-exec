@@ -1,29 +1,30 @@
 {
   "task": {
-    "id": "7ad68b7f27f746f3",
+    "id": "93bac50bc6fd4cc9",
     "prompt": "Write a Python function `fizzbuzz(n)` that returns a list of strings for the numbers 1..n: \"Fizz\" for multiples of 3, \"Buzz\" for multiples of 5, \"FizzBuzz\" for multiples of both, otherwise the number as a string.",
     "tests": "from solution import fizzbuzz\n\ndef test_first_five():\n    assert fizzbuzz(5) == [\"1\", \"2\", \"Fizz\", \"4\", \"Buzz\"]\n\ndef test_fifteen():\n    assert fizzbuzz(15)[-1] == \"FizzBuzz\"\n\ndef test_length_and_zero():\n    assert len(fizzbuzz(30)) == 30\n    assert fizzbuzz(0) == []\n",
-    "created_at": "2026-09-30T05:36:59.877195+00:00"
+    "created_at": "2026-09-30T06:32:14.308581+00:00"
   },
   "generating": false,
   "candidates": [
     {
-      "id": "afe7fc414ad045b6",
-      "task_id": "7ad68b7f27f746f3",
+      "id": "c661e3cb982044b9",
+      "task_id": "93bac50bc6fd4cc9",
       "source": "llm",
       "code": "def fizzbuzz(n):\n    return [\"FizzBuzz\" if i % 15 == 0 else \"Fizz\" if i % 3 == 0 else \"Buzz\" if i % 5 == 0 else str(i) for i in range(1, n+1)]\n",
-      "created_at": "2026-09-30T05:37:02.679461+00:00",
+      "created_at": "2026-09-30T06:32:16.723879+00:00",
+      "parent_id": null,
       "latest_run": {
-        "id": "48993292e32e4e74",
-        "candidate_id": "afe7fc414ad045b6",
-        "job_name": "run-7a3efe59",
+        "id": "d96923dbc42948ce",
+        "candidate_id": "c661e3cb982044b9",
+        "job_name": "run-afd8d491",
         "status": "passed",
         "exit_code": 0,
         "stdout": "",
         "stderr": "",
-        "duration_ms": 5512,
-        "started_at": "2026-09-30T05:37:02.686501+00:00",
-        "finished_at": "2026-09-30T05:37:08.200562+00:00",
+        "duration_ms": 4391,
+        "started_at": "2026-09-30T06:32:16.729516+00:00",
+        "finished_at": "2026-09-30T06:32:21.124035+00:00",
         "test_results": {
           "tests": [
             {
@@ -49,22 +50,23 @@
       }
     },
     {
-      "id": "0bef7aef6baa410a",
-      "task_id": "7ad68b7f27f746f3",
+      "id": "bceafc8174ab4d2f",
+      "task_id": "93bac50bc6fd4cc9",
       "source": "llm",
-      "code": "def fizzbuzz(n):\n    return [\n        \"FizzBuzz\" if i % 15 == 0 else\n        \"Fizz\" if i % 3 == 0 else\n        \"Buzz\" if i % 5 == 0 else\n        str(i)\n        for i in range(1, n+1)\n    ]\n",
-      "created_at": "2026-09-30T05:37:02.681905+00:00",
+      "code": "def fizzbuzz(n):\n    return [\n        \"FizzBuzz\" if i % 15 == 0 else\n        \"Fizz\" if i % 3 == 0 else\n        \"Buzz\" if i % 5 == 0 else\n        str(i)\n        for i in range(1, n + 1)\n    ]\n",
+      "created_at": "2026-09-30T06:32:16.725888+00:00",
+      "parent_id": null,
       "latest_run": {
-        "id": "189acefae6c748f5",
-        "candidate_id": "0bef7aef6baa410a",
-        "job_name": "run-654af5fe",
+        "id": "774f1c8e34604f58",
+        "candidate_id": "bceafc8174ab4d2f",
+        "job_name": "run-70960aed",
         "status": "passed",
         "exit_code": 0,
         "stdout": "",
         "stderr": "",
-        "duration_ms": 5515,
-        "started_at": "2026-09-30T05:37:02.686531+00:00",
-        "finished_at": "2026-09-30T05:37:08.204018+00:00",
+        "duration_ms": 4392,
+        "started_at": "2026-09-30T06:32:16.729544+00:00",
+        "finished_at": "2026-09-30T06:32:21.124122+00:00",
         "test_results": {
           "tests": [
             {
@@ -90,22 +92,23 @@
       }
     },
     {
-      "id": "eae08d06cb6b4d3c",
-      "task_id": "7ad68b7f27f746f3",
+      "id": "8a4616584a0a42e5",
+      "task_id": "93bac50bc6fd4cc9",
       "source": "llm",
       "code": "def fizzbuzz(n):\n    return [\"FizzBuzz\" if i % 15 == 0 else \"Fizz\" if i % 3 == 0 else \"Buzz\" if i % 5 == 0 else str(i) for i in range(1, n+1)]\n",
-      "created_at": "2026-09-30T05:37:02.684816+00:00",
+      "created_at": "2026-09-30T06:32:16.727806+00:00",
+      "parent_id": null,
       "latest_run": {
-        "id": "c42653327b2f4750",
-        "candidate_id": "eae08d06cb6b4d3c",
-        "job_name": "run-2efcc188",
+        "id": "416d5d1e8cee4fac",
+        "candidate_id": "8a4616584a0a42e5",
+        "job_name": "run-d2d9d932",
         "status": "passed",
         "exit_code": 0,
         "stdout": "",
         "stderr": "",
-        "duration_ms": 5510,
-        "started_at": "2026-09-30T05:37:02.686552+00:00",
-        "finished_at": "2026-09-30T05:37:08.202391+00:00",
+        "duration_ms": 4391,
+        "started_at": "2026-09-30T06:32:16.729566+00:00",
+        "finished_at": "2026-09-30T06:32:21.121764+00:00",
         "test_results": {
           "tests": [
             {
@@ -133,28 +136,44 @@
   ],
   "annotations": [
     {
-      "id": "4d153455c05d4c4a",
-      "task_id": "7ad68b7f27f746f3",
-      "candidate_id": "afe7fc414ad045b6",
+      "id": "68d819d7b5cf4fa1",
+      "task_id": "93bac50bc6fd4cc9",
+      "candidate_id": "c661e3cb982044b9",
       "label": "correct",
       "notes": "demo: run status was passed",
-      "created_at": "2026-09-30T05:37:09.209211+00:00"
+      "created_at": "2026-09-30T06:32:21.633301+00:00"
     },
     {
-      "id": "319f2125b9f3432e",
-      "task_id": "7ad68b7f27f746f3",
-      "candidate_id": "0bef7aef6baa410a",
+      "id": "13700984cee0493a",
+      "task_id": "93bac50bc6fd4cc9",
+      "candidate_id": "bceafc8174ab4d2f",
       "label": "correct",
       "notes": "demo: run status was passed",
-      "created_at": "2026-09-30T05:37:09.220829+00:00"
+      "created_at": "2026-09-30T06:32:21.645032+00:00"
     },
     {
-      "id": "dd0d7c5674594af2",
-      "task_id": "7ad68b7f27f746f3",
-      "candidate_id": "eae08d06cb6b4d3c",
+      "id": "0d627ffeefa140a1",
+      "task_id": "93bac50bc6fd4cc9",
+      "candidate_id": "8a4616584a0a42e5",
       "label": "correct",
       "notes": "demo: run status was passed",
-      "created_at": "2026-09-30T05:37:09.239083+00:00"
+      "created_at": "2026-09-30T06:32:21.656981+00:00"
+    }
+  ],
+  "preferences": [
+    {
+      "id": "e380585aadd148cf",
+      "task_id": "93bac50bc6fd4cc9",
+      "chosen_candidate_id": "c661e3cb982044b9",
+      "rejected_candidate_id": "bceafc8174ab4d2f",
+      "created_at": "2026-09-30T06:32:21.673954+00:00"
+    },
+    {
+      "id": "f9964bdff8274625",
+      "task_id": "93bac50bc6fd4cc9",
+      "chosen_candidate_id": "c661e3cb982044b9",
+      "rejected_candidate_id": "8a4616584a0a42e5",
+      "created_at": "2026-09-30T06:32:21.675041+00:00"
     }
   ]
 }

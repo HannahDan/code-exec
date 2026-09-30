@@ -1,7 +1,7 @@
 {
   "concurrency": {
     "cluster_peak_unfinished_jobs": 4,
-    "cluster_samples": 78,
+    "cluster_samples": 83,
     "max_concurrent_jobs": 4,
     "pool_peak_in_flight": 4,
     "runs": 12,
@@ -19,10 +19,10 @@
       "passed",
       "passed"
     ],
-    "wall_seconds": 25.3
+    "wall_seconds": 26.5
   },
   "fork_bomb": {
-    "duration_ms": 9257,
+    "duration_ms": 9320,
     "exit_code": 137,
     "follow_up_status": "passed",
     "status": "oom",
@@ -33,7 +33,7 @@
     "wall_seconds": 9.3
   },
   "huge_stdout": {
-    "duration_ms": 4950,
+    "duration_ms": 5046,
     "exit_code": 0,
     "status": "passed",
     "stderr_tail": "",
@@ -58,7 +58,7 @@
     "truncated": true
   },
   "memory_bomb": {
-    "duration_ms": 4356,
+    "duration_ms": 4462,
     "exit_code": 137,
     "status": "oom",
     "stderr_tail": "container OOMKilled (exit 137), memory limit 128Mi",
@@ -67,7 +67,7 @@
     "truncated": false
   },
   "memory_growing_list": {
-    "duration_ms": 4385,
+    "duration_ms": 3819,
     "exit_code": 137,
     "status": "oom",
     "stderr_tail": "container OOMKilled (exit 137), memory limit 128Mi",
@@ -76,17 +76,17 @@
     "truncated": false
   },
   "missing_image": {
-    "duration_ms": 3342,
+    "duration_ms": 3381,
     "exit_code": null,
     "status": "infra_error",
     "stderr_tail": "pod stuck in ErrImagePull: rpc error: code = Unknown desc = Error response from daemon: manifest for python:0.0-does-not-exist not found: manifest unknown: manifest unknown",
     "stdout_bytes": 0,
     "tests": [],
     "truncated": null,
-    "wall_seconds": 3.3
+    "wall_seconds": 3.4
   },
   "nproc_limit": {
-    "duration_ms": 5078,
+    "duration_ms": 6097,
     "exit_code": 0,
     "probe": "NPROC_PROBE forked=63 stopped_by=errno=11",
     "status": "passed",
@@ -102,7 +102,7 @@
     "truncated": false
   },
   "outbound_network": {
-    "duration_ms": 4433,
+    "duration_ms": 4983,
     "exit_code": 1,
     "host_online": true,
     "policy_enforced": false,
@@ -120,7 +120,7 @@
     "truncated": false
   },
   "read_only_fs": {
-    "duration_ms": 4932,
+    "duration_ms": 4962,
     "exit_code": 0,
     "status": "passed",
     "stderr_tail": "",
@@ -150,27 +150,27 @@
     "truncated": false
   },
   "recovery_reattach": {
-    "duration_ms": 4401,
-    "job_name": "run-5683a2de",
+    "duration_ms": 4417,
+    "job_name": "run-2ecb8800",
     "status": "passed"
   },
   "syntax_error": {
-    "duration_ms": 3929,
+    "duration_ms": 3877,
     "exit_code": 2,
     "status": "error",
-    "stderr_tail": "solution import failed: Traceback (most recent call last):\n  File \"/workspace/runner.py\", line 56, in main\n    import solution  # noqa: F401\n    ^^^^^^^^^^^^^^^\n  File \"/workspace/..2026_09_30_05_30_44.3856777805/solution.py\", line 1\n    def add(a, b)\n                 ^\nSyntaxError: expected ':'\n",
-    "stdout_bytes": 297,
+    "stderr_tail": "solution import failed: Traceback (most recent call last):\n  File \"/workspace/runner.py\", line 56, in main\n    import solution  # noqa: F401\n    ^^^^^^^^^^^^^^^\n  File \"/workspace/..2026_09_30_06_15_14.675548282/solution.py\", line 1\n    def add(a, b)\n                 ^\nSyntaxError: expected ':'\n",
+    "stdout_bytes": 296,
     "tests": [],
     "truncated": false
   },
   "timeout": {
-    "duration_ms": 9999,
+    "duration_ms": 9465,
     "exit_code": null,
     "status": "timeout",
     "stderr_tail": "killed after activeDeadlineSeconds=10",
     "stdout_bytes": 0,
     "tests": [],
     "truncated": false,
-    "wall_seconds": 10.0
+    "wall_seconds": 9.5
   }
 }

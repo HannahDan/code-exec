@@ -19,9 +19,10 @@ CREATE TABLE IF NOT EXISTS tasks (
 CREATE TABLE IF NOT EXISTS candidates (
     id TEXT PRIMARY KEY,
     task_id TEXT NOT NULL REFERENCES tasks(id),
-    source TEXT NOT NULL CHECK(source IN ('llm','raw')),
+    source TEXT NOT NULL CHECK(source IN ('llm','raw','edited')),
     code TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    parent_id TEXT
 );
 CREATE TABLE IF NOT EXISTS runs (
     id TEXT PRIMARY KEY,
@@ -73,7 +74,36 @@ def _get_conn() -> sqlite3.Connection:
 def init_db() -> None:
     conn = _get_conn()
     conn.executescript(SCHEMA)
+    _migrate_candidates(conn)
     conn.close()
+
+
+def _migrate_candidates(conn: sqlite3.Connection) -> None:
+    """Pre-edit databases lack parent_id and reject source='edited'; SQLite can't alter a
+    CHECK constraint, so the table is rebuilt with foreign keys off."""
+    sql = conn.execute("SELECT sql FROM sqlite_master WHERE name = 'candidates'").fetchone()[0]
+    if "'edited'" in sql:
+        return
+    conn.execute("PRAGMA foreign_keys=OFF")
+    conn.executescript(
+        """
+        BEGIN;
+        CREATE TABLE candidates_new (
+            id TEXT PRIMARY KEY,
+            task_id TEXT NOT NULL REFERENCES tasks(id),
+            source TEXT NOT NULL CHECK(source IN ('llm','raw','edited')),
+            code TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            parent_id TEXT
+        );
+        INSERT INTO candidates_new (id, task_id, source, code, created_at)
+            SELECT id, task_id, source, code, created_at FROM candidates ORDER BY rowid;
+        DROP TABLE candidates;
+        ALTER TABLE candidates_new RENAME TO candidates;
+        COMMIT;
+        """
+    )
+    conn.execute("PRAGMA foreign_keys=ON")
 
 
 def _row_to_dict(row: sqlite3.Row | None) -> dict | None:
@@ -103,6 +133,28 @@ def get_task(task_id: str) -> dict | None:
     row = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
     conn.close()
     return _row_to_dict(row)
+
+
+def update_task_tests(task_id: str, tests: str) -> None:
+    conn = _get_conn()
+    conn.execute("UPDATE tasks SET tests = ? WHERE id = ?", (tests, task_id))
+    conn.commit()
+    conn.close()
+
+
+def delete_task(task_id: str) -> None:
+    """Delete a task and everything hanging off it, in one transaction."""
+    conn = _get_conn()
+    with conn:
+        conn.execute("DELETE FROM preferences WHERE task_id = ?", (task_id,))
+        conn.execute("DELETE FROM annotations WHERE task_id = ?", (task_id,))
+        conn.execute(
+            "DELETE FROM runs WHERE candidate_id IN (SELECT id FROM candidates WHERE task_id = ?)",
+            (task_id,),
+        )
+        conn.execute("DELETE FROM candidates WHERE task_id = ?", (task_id,))
+        conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    conn.close()
 
 
 _LATEST_RUNS = (
@@ -140,13 +192,13 @@ def list_tasks(exclude_prompt: str | None = None) -> list[dict]:
 
 # ── Candidates ─────────────────────────────────────────────────────
 
-def insert_candidate(task_id: str, source: str, code: str) -> dict:
+def insert_candidate(task_id: str, source: str, code: str, parent_id: str | None = None) -> dict:
     conn = _get_conn()
     cand_id = _id()
     now = _now()
     conn.execute(
-        "INSERT INTO candidates (id, task_id, source, code, created_at) VALUES (?, ?, ?, ?, ?)",
-        (cand_id, task_id, source, code, now),
+        "INSERT INTO candidates (id, task_id, source, code, created_at, parent_id) VALUES (?, ?, ?, ?, ?, ?)",
+        (cand_id, task_id, source, code, now, parent_id),
     )
     conn.commit()
     row = conn.execute("SELECT * FROM candidates WHERE id = ?", (cand_id,)).fetchone()
@@ -291,7 +343,16 @@ def get_all_preferences() -> list[dict]:
         "JOIN tasks t ON t.id = p.task_id "
         "JOIN candidates c1 ON c1.id = p.chosen_candidate_id "
         "JOIN candidates c2 ON c2.id = p.rejected_candidate_id "
-        "ORDER BY p.created_at"
+        "ORDER BY p.rowid"
+    ).fetchall()
+    conn.close()
+    return [_row_to_dict(r) for r in rows]
+
+
+def get_preferences_for_task(task_id: str) -> list[dict]:
+    conn = _get_conn()
+    rows = conn.execute(
+        "SELECT * FROM preferences WHERE task_id = ? ORDER BY rowid", (task_id,)
     ).fetchall()
     conn.close()
     return [_row_to_dict(r) for r in rows]
